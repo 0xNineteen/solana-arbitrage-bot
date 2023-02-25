@@ -1,4 +1,4 @@
-## solana arbitrage bot code
+## solana arbitrage bot
 
 happy searching :)
 
