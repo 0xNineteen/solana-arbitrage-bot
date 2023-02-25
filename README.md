@@ -7,6 +7,8 @@
 - `onchain-data/`: analysis of other arbitrage swaps
 - `mainnet-fork/`: fork mainnet account states to test swap input/output estimates
 
+each folder contains a corresponding `README.md` which explains how it works
+
 ## dexs supported 
 - serum 
 - aldrin 
