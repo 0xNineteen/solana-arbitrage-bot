@@ -1,0 +1,11 @@
+{
+    "num_failed_txs": 6154,
+    "num_success_txs": 846,
+    "num_profitable_txs": 816,
+    "n_usdc_arbs": 816,
+    "sum_of_profits": 469.416826,
+    "cost_of_failed_txs": -2.7693000000000003,
+    "total_profit": 466.647526,
+    "SOL_PRICE": 90,
+    "time_interval": "0 days - 5 hours - 55 minutes - 54 seconds"
+}

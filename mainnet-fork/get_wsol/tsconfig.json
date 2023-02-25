@@ -1,0 +1,11 @@
+{
+    "compilerOptions": {
+      "lib": ["es2019"],
+      "module": "commonjs",
+      "target": "es6",
+      "esModuleInterop": true,
+      "strict": false,
+      "noImplicitAny": false, 
+    }
+}
+  

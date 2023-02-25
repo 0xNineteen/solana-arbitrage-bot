@@ -1,0 +1,6 @@
+programs/
+accounts/
+node_modules/ 
+test-ledger/
+.ipynb_checkpoints/
+localnet_owner.key

@@ -1,0 +1,13 @@
+- setup dev env for web3 fork: `npm run dev` in forked repo 
+    - updated the connection to get multiple transactions (which aren't parsed)
+- `npx ts-node {ts_file_here}.ts`
+    - `orca.ts`: first attempt at orca txs -- *retired* 
+    - `index.ts`: view signatures + txs which attempt to capture arb 
+        - change `i_difference` to go ahead or behind the block where my arb landed 
+            - 1 behind = where the arb landed 
+            - up to 4 behind where people attempt the arb but the size is too big 
+    - `analyze.ts`: analyze the arbitragers which attempted the arb including metrics such as 
+    `#txs fail/success`, `total profit` etc. 
+        - `results/`: JSON results of the above script
+- `results.py`: analyze the results from `analyze.ts` further in python 
+- `arbitragers/`: folder of all arbitrager signers going back up to 4 blocks and ahead 1 of mine 
