@@ -1,5 +1,7 @@
 ## solana arbitrage bot code
 
+happy searching :)
+
 ## layout 
 - `client/`: off-chain arbitrage bot code 
 - `program/`: on-chain swap program
