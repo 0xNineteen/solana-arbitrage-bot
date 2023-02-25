@@ -24,3 +24,7 @@ each folder contains a corresponding `README.md` which explains how it works
 - in the client we use a brute-force approach to find arb opportunities instead of negative cycle algos bc its much faster and can find all opportunities
 - we also dont calculate the optimal swap input amount for each arb bc its faster to spam multiple decreasing amounts and let the largest one land (this is what the winner of the arbitrage opportunities was doing - eg, send tx with input size N, N/2, N/4, ...) 
 - why do we need an on-chain swap program? checkout this [post](https://github.com/0xNineteen/blog.md/blob/master/rust-macros-arbitrage/index.md) out -- if you swap from A -> B -> C you might get more/less of B than expected which effects the swap instruction to C
+
+## why share this alpha
+
+the life of a lone searcher is a lonely one where you cant share what you find or share your code - while working on this project i realized this is not what im about and thus i open source
