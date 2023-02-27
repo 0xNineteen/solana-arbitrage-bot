@@ -1,0 +1,18 @@
+{
+  "name": "devnet",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@orca-so/sdk": "^1.2.23",
+    "@solana/web3.js": "^1.36.0",
+    "bip39": "^3.0.4",
+    "decimal.js": "^10.3.1",
+    "typescript": "^4.6.2"
+  }
+}

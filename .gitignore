@@ -1,6 +1,5 @@
 test-ledger/
 node_modules/
-tmp/
 sdks/
 .vscode/
 
