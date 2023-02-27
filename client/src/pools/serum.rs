@@ -1,25 +1,23 @@
 use core::panic;
-use std::borrow::Borrow;
+
 use std::collections::HashMap;
 use std::fmt::Debug;
 use serde;
 use serde::{Deserialize, Serialize};
 use crate::pool::PoolOperations;
-use crate::serialize::token::{Token, WrappedPubkey};
-use crate::serialize::pool::JSONFeeStructure;
-use crate::utils::{str2pubkey, derive_token_address}; 
+use crate::serialize::token::{WrappedPubkey};
+
+use crate::utils::{derive_token_address}; 
 
 use solana_sdk::pubkey::Pubkey;
 
 use anchor_spl::dex::serum_dex::{
-    critbit::{LeafNode, Slab, SlabView},
-    declare_check_assert_macros,
-    error::SourceFileId,
+    critbit::{SlabView},
     matching::OrderBookState,
     state::Market,
 };
 use std::ops::DerefMut;
-use std::fmt;
+
 
 use anchor_client::{Program, Cluster};
 use solana_sdk::instruction::Instruction;
@@ -88,9 +86,9 @@ fn bid_iteration(
     let quote_lot_size = ob.market_state.pc_lot_size;
     let base_lot_size = ob.market_state.coin_lot_size;
 
-    let start_amount_in = iteration.amount_in.clone();
+    let start_amount_in = iteration.amount_in;
     let max_pc_qty = fee_tier.remove_taker_fee(iteration.amount_in) / quote_lot_size;
-    let mut pc_qty_remaining = max_pc_qty.clone(); 
+    let mut pc_qty_remaining = max_pc_qty; 
 
     let done = loop {
         let flag = match ob.asks.find_min() { // min = best ask 
@@ -216,12 +214,12 @@ impl PoolOperations for SerumPool {
             },
             _ => panic!("clsuter {} not supported", cluster)
         };
-        let oo_str = std::fs::read_to_string(&oo_path).unwrap();
+        let oo_str = std::fs::read_to_string(oo_path).unwrap();
         let oo_book: HashMap<String, String> = serde_json::from_str(&oo_str).unwrap();
         self.open_orders = Some(oo_book); 
     }
 
-    fn mint_2_addr(&self, mint: &Pubkey) -> Pubkey {
+    fn mint_2_addr(&self, _mint: &Pubkey) -> Pubkey {
         panic!("ahhh")
     }
 
@@ -248,7 +246,7 @@ impl PoolOperations for SerumPool {
         &self, 
         amount_in: u128, 
         mint_in: &Pubkey,
-        mint_out: &Pubkey,
+        _mint_out: &Pubkey,
     ) -> u128 {
 
         let market_pk = self.own_address.0; 
@@ -317,7 +315,7 @@ impl PoolOperations for SerumPool {
         program: &Program,
         owner: &Pubkey,
         mint_in: &Pubkey, 
-        mint_out: &Pubkey
+        _mint_out: &Pubkey
     ) -> Vec<Instruction> {
 
         let oos = self.open_orders.as_ref().unwrap(); 
@@ -330,8 +328,8 @@ impl PoolOperations for SerumPool {
             &program.id()
         );
 
-        let base_ata = derive_token_address(&owner, &self.base_mint);
-        let quote_ata = derive_token_address(&owner, &self.quote_mint);
+        let base_ata = derive_token_address(owner, &self.base_mint);
+        let quote_ata = derive_token_address(owner, &self.quote_mint);
         
         let side = if *mint_in == self.quote_mint.0 { Side::Bid }  else { Side::Ask };
         let payer_acc = if side == Side::Ask { base_ata } else { quote_ata };
@@ -348,28 +346,28 @@ impl PoolOperations for SerumPool {
                     coin_vault: self.base_vault.0,
                     pc_vault: self.quote_vault.0,
                     vault_signer: self.vault_signer.0, 
-                    open_orders: open_orders,
+                    open_orders,
                     order_payer_token_account: payer_acc, 
                     coin_wallet: base_ata, 
                 },
                 pc_wallet: quote_ata, 
-                authority: owner.clone(), 
+                authority: *owner, 
                 dex_program: *SERUM_PROGRAM_ID, 
                 token_program: *TOKEN_PROGRAM_ID,
                 rent: solana_sdk::sysvar::rent::id(),
-                swap_state: swap_state,
+                swap_state,
             })
             .args(tmp_instructions::SerumSwap { side: _side });
 
-        let swap_ix = request
-            .instructions().unwrap(); 
+         
 
-        swap_ix
+        request
+            .instructions().unwrap()
     }
 
     fn can_trade(&self, 
         mint_in: &Pubkey,
-        mint_out: &Pubkey
+        _mint_out: &Pubkey
     ) -> bool {
 
         let market_acc = &self.accounts.as_ref().unwrap()[0];

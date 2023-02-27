@@ -71,7 +71,7 @@ fn test_all_pool_quotes(
     println!("owner: {}", owner.pubkey());
 
     let provider = Client::new_with_options(
-        cluster.clone(), 
+        cluster, 
         Rc::new(owner), 
         CommitmentConfig::confirmed() 
     );
@@ -119,10 +119,10 @@ fn test_pool_quote(
     let pool_mints = pool.get_mints(); 
     let mint_in = &pool_mints[0];
     let mint_out = &pool_mints[1];
-    let src_scale = pool.mint_2_scale(&mint_in);
+    let src_scale = pool.mint_2_scale(mint_in);
 
-    let src_ata = derive_token_address(&owner.pubkey(), &mint_in);
-    let dst_ata = derive_token_address(&owner.pubkey(), &mint_out);
+    let src_ata = derive_token_address(&owner.pubkey(), mint_in);
+    let _dst_ata = derive_token_address(&owner.pubkey(), mint_out);
 
     if !pool.can_trade(mint_in, mint_out) {
         println!("pool path: {}", pool_path);
@@ -133,9 +133,9 @@ fn test_pool_quote(
     let mut amount_in; 
     if src_scale >= 2  {
         // scale -2 bc sometimes saber pool amounts are too small for full 1 swap
-        amount_in = 1 * 10_u128.pow((src_scale-2) as u32);
+        amount_in = 10_u128.pow((src_scale-2) as u32);
     } else { 
-        amount_in = 1 * 10_u128.pow(src_scale as u32);
+        amount_in = 10_u128.pow(src_scale as u32);
     }
 
     // println!("---");
@@ -149,8 +149,8 @@ fn test_pool_quote(
     loop {
         quote_out_amount = pool.get_quote_with_amounts_scaled(
             amount_in, 
-            &mint_in, 
-            &mint_out
+            mint_in, 
+            mint_out
         );
         // println!("quote: {}", quote_out_amount);
 
@@ -168,9 +168,7 @@ fn test_pool_quote(
 
     // ** perform a swap tx 
     // record balance before swap    
-    let src_balance = connection.get_token_account_balance(&src_ata).expect(
-        &format!("couldnt find ata for mint {:?} ...", mint_in)
-    ).amount.parse::<u128>().unwrap();
+    let src_balance = connection.get_token_account_balance(&src_ata).unwrap_or_else(|_| panic!("couldnt find ata for mint {:?} ...", mint_in)).amount.parse::<u128>().unwrap();
 
     let mut ixs = vec![];
 
@@ -180,7 +178,7 @@ fn test_pool_quote(
         if mint_in.to_string() != "So11111111111111111111111111111111111111112" {
             let mint_ix = mint_to(
                 &TOKEN_PROGRAM_ID, 
-                &mint_in, 
+                mint_in, 
                 &src_ata,
                 &owner.pubkey(), 
                 &[&owner.pubkey()], 
@@ -232,10 +230,10 @@ fn test_pool_quote(
 
     // swap A -> B  
     let swap_ix = pool.swap_ix(
-        &program, 
+        program, 
         &owner.pubkey(), 
-        &mint_in, 
-        &mint_out
+        mint_in, 
+        mint_out
     );
     ixs.push(swap_ix);
     
@@ -260,12 +258,12 @@ fn test_pool_quote(
                     println!("quote: {amount_in} -> {quote_out_amount}");
                     println!("logs: {:#?}", s.value.logs);
                     panic!("ahhh");
-                    return 1;
+                    1
                 }, 
                 None => {
                     // parse logs for last output amount 
                     let mut actual_amount_out = 0;
-                    for log in s.value.logs.clone().unwrap() {
+                    for log in s.value.logs.unwrap() {
                         if log.contains("swap amount out") {
                             let split = log.split("swap amount out: ").collect::<Vec<_>>();
                             let amount_out = split[split.len()-1].parse::<u128>().unwrap();
@@ -285,7 +283,7 @@ fn test_pool_quote(
                             "pool path: {pool_path} : \
                             actual: {actual_amount_out} quote: {quote_out_amount}");
                     }
-                    return 0;
+                    0
                 }
             }
         }, 
@@ -294,7 +292,7 @@ fn test_pool_quote(
             println!("pool path: {}", pool_path);
             println!("quote: {} -> {}", amount_in, quote_out_amount);
             panic!("ahhh");
-            return 1;
+            1
         }
     }
 

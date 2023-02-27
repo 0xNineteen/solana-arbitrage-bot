@@ -3,40 +3,33 @@ use anchor_client::solana_sdk::commitment_config::CommitmentConfig;
 use anchor_client::solana_sdk::pubkey::Pubkey;
 use anchor_client::solana_sdk::signature::{Keypair, Signer};
 use anchor_client::solana_sdk::signature::read_keypair_file;
-use anchor_client::{Client, Cluster, Program};
-use anchor_lang::solana_program::instruction::{AccountMeta, Instruction};
-use anchor_spl::dex;
+use anchor_client::{Client, Cluster};
+
+
 use client::pools::SerumPool;
-use solana_sdk::fee::FeeBin;
+
 use solana_sdk::transaction::Transaction;
 
 use std::rc::Rc;
-use std::str::FromStr;
-use std::collections::{HashMap, HashSet};
-use std::fmt::Debug;
+
+use std::collections::{HashMap};
+
 use std::vec;
-use std::fs;
-use std::sync::Arc;
+
+
 
 use tmp::accounts as tmp_accounts;
 use tmp::instruction as tmp_instructions;
 
-use client::serialize::token::unpack_token_account;
-use client::{
-    pool_utils::stable::{compute_a, compute_d, compute_new_destination_amount as compute_y},
-    pool_utils::orca::get_pool_quote_with_amounts, 
-    pool_utils::constant_product::*,
-    pool_utils::fees::Fees,
-    pool_utils::base::{CurveType, SwapCurve},
-    pool_utils::calculator::TradeDirection::AtoB,
-};
 
-use sha2::{Digest, Sha256};
+
+
+use sha2::{Digest};
 
 use anchor_lang::prelude::*;
 
-use client::utils::{str2pubkey, derive_token_address, read_json_dir};
-use client::pool::{ PoolType, PoolOperations, pool_factory};
+use client::utils::{derive_token_address};
+use client::pool::{ PoolType};
 use client::constants::*;
 use client::pool_utils::serum::*;
 
@@ -45,12 +38,9 @@ use solana_sdk::account::Account;
 use solana_sdk::account_info::AccountInfo;
 
 use anchor_spl::dex::serum_dex::{
-    critbit::{LeafNode, Slab, SlabView},
-    declare_check_assert_macros,
-    error::SourceFileId,
+    critbit::{SlabView},
     matching::OrderBookState,
     state::Market,
-    matching::Side,
 };
 use std::ops::DerefMut;
 
@@ -80,9 +70,9 @@ fn bid_iteration(
 ) -> bool {
     let quote_lot_size = ob.market_state.pc_lot_size;
 
-    let start_amount_in = iteration.amount_in.clone();
+    let start_amount_in = iteration.amount_in;
     let max_pc_qty = fee_tier.remove_taker_fee(iteration.amount_in) / quote_lot_size;
-    let mut pc_qty_remaining = max_pc_qty.clone(); 
+    let mut pc_qty_remaining = max_pc_qty; 
 
     let done = loop {
         let flag = match ob.asks.find_min() { // min = best ask 
@@ -190,31 +180,31 @@ fn main() {
     // let pool_path = "../../serum/serum_pools/ByRys5tuUWDgL73G8JBAEfkdFf8JWBzPBDHsBVQ5vbQA_serum_dex.json";
     // let pool_path = "../../serum/serum_pools/8PMHyKJ5FycCopijj6eXeCkenB71CYxCKH7AibkksdG5_serum_dex.json";
     let pool_path = "../../serum/serum_pools/7dLVkUfBVfCGkFhSXDCq1ukM9usathSgS716t643iFGF_serum_dex.json";
-    let pool_tipe = PoolType::SerumPoolType; 
+    let _pool_tipe = PoolType::SerumPoolType; 
     
-    let contents = std::fs::read_to_string(&pool_path).unwrap();
+    let contents = std::fs::read_to_string(pool_path).unwrap();
     let pool: SerumPool = serde_json::from_str(&contents).unwrap(); 
 
     // load market 
     let program_id = *SERUM_PROGRAM_ID;
     let market_pk = &pool.own_address.0; 
-    let mut market_acc = connection.get_account(&market_pk).unwrap();
-    let market_info = account_info(&market_pk, &mut market_acc);
+    let mut market_acc = connection.get_account(market_pk).unwrap();
+    let market_info = account_info(market_pk, &mut market_acc);
     let mut market = Market::load(&market_info, &program_id).unwrap();
 
     // load bids + asks 
     let bids_pk = &pool.bids.0; 
     let asks_pk = &pool.asks.0;
 
-    let bid_acc = connection.get_account(&bids_pk).unwrap();
+    let bid_acc = connection.get_account(bids_pk).unwrap();
 
-    let mut bid_acc_clone = bid_acc.clone();
-    let bid_info = account_info(&bids_pk, &mut bid_acc_clone);
+    let mut bid_acc_clone = bid_acc;
+    let bid_info = account_info(bids_pk, &mut bid_acc_clone);
     let mut bids = market.load_bids_mut(&bid_info).unwrap();
 
-    let ask_acc = connection.get_account(&asks_pk).unwrap();
-    let mut ask_acc_clone = ask_acc.clone();
-    let ask_info = account_info(&asks_pk, &mut ask_acc_clone);
+    let ask_acc = connection.get_account(asks_pk).unwrap();
+    let mut ask_acc_clone = ask_acc;
+    let ask_info = account_info(asks_pk, &mut ask_acc_clone);
     let mut asks = market.load_asks_mut(&ask_info).unwrap();
 
     let mut ob = OrderBookState {
@@ -224,11 +214,11 @@ fn main() {
     };
 
     let quote_scale = 10_u64.pow(pool.quote_scale as u32);
-    let base_scale = 10_u64.pow(pool.base_scale as u32);
+    let _base_scale = 10_u64.pow(pool.base_scale as u32);
     println!("{} {}", pool.quote_scale, pool.base_scale);
     
     let amount_in_u = 1000 * 10_u64.pow(pool.base_scale as u32); // 1 USDC  
-    let fee_tier = FeeTier::from_srm_and_msrm_balances(&market_pk, 0, 0);
+    let fee_tier = FeeTier::from_srm_and_msrm_balances(market_pk, 0, 0);
     let mut iteration = Iteration {
         amount_in: amount_in_u,
         amount_out: 0,
@@ -315,7 +305,7 @@ fn main() {
 
     // setup anchor things 
     let provider = Client::new_with_options(
-        cluster.clone(), 
+        cluster, 
         Rc::new(owner), 
         CommitmentConfig::confirmed() 
     );
@@ -357,7 +347,7 @@ fn main() {
     let ix = program
         .request()
         .accounts(tmp_accounts::TokenAndSwapState {
-            swap_state: swap_state,
+            swap_state,
             src: base_ata,
         })
         .args(tmp_instructions::StartSwap {
@@ -384,7 +374,7 @@ fn main() {
             dex_program: program_id, 
             token_program: *TOKEN_PROGRAM_ID,
             rent: solana_sdk::sysvar::rent::id(),
-            swap_state: swap_state,
+            swap_state,
         })
         .args(tmp_instructions::SerumSwap { side: _side })
         .instructions().unwrap(); 

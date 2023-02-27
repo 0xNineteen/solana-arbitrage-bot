@@ -60,14 +60,14 @@ impl PoolOperations for SaberPool {
             .accounts(tmp_accounts::SaberSwap{
                 pool_account: self.pool_account.0, 
                 authority: self.authority.0, 
-                user_transfer_authority: owner.clone(), 
-                user_src: user_src, 
-                user_dst: user_dst, 
-                pool_src: pool_src, 
-                pool_dst: pool_dst, 
+                user_transfer_authority: *owner, 
+                user_src, 
+                user_dst, 
+                pool_src, 
+                pool_dst, 
                 fee_dst: fee_acc.0, 
                 saber_swap_program: *SABER_PROGRAM_ID, 
-                swap_state: swap_state, 
+                swap_state, 
                 token_program: *TOKEN_PROGRAM_ID,
             }) 
             .args(tmp_ix::SaberSwap {}) 
@@ -94,12 +94,12 @@ impl PoolOperations for SaberPool {
         let pool_amounts = [*pool_src_amount, *pool_dst_amount];
         let percision_multipliers = [1, 1];
 
-        let scaled_quote = calculator.get_quote(
+        
+        calculator.get_quote(
             pool_amounts,    
             percision_multipliers, 
             scaled_amount_in 
-        );
-        scaled_quote
+        )
 
     }
 
@@ -113,7 +113,7 @@ impl PoolOperations for SaberPool {
         accounts 
     }
 
-    fn set_update_accounts(&mut self, accounts: Vec<Option<Account>>, cluster: Cluster) { 
+    fn set_update_accounts(&mut self, accounts: Vec<Option<Account>>, _cluster: Cluster) { 
         let ids: Vec<String> = self
             .get_mints()
             .iter()
@@ -133,30 +133,30 @@ impl PoolOperations for SaberPool {
     }
 
     fn can_trade(&self, 
-        mint_in: &Pubkey,
-        mint_out: &Pubkey
+        _mint_in: &Pubkey,
+        _mint_out: &Pubkey
     ) -> bool {
         for amount in self.pool_amounts.values() {
             if *amount == 0 { return false; }
         }
-        return true;
+        true
     }
 
     fn get_name(&self) -> String {
-        let name = "Saber".to_string(); 
-        name
+         
+        "Saber".to_string()
     }
 
     fn mint_2_addr(&self, mint: &Pubkey) -> Pubkey {
         let token = self.tokens.get(&mint.to_string()).unwrap();
-        let addr = token.addr.0;
-        addr
+        
+        token.addr.0
     }
 
     fn mint_2_scale(&self, mint: &Pubkey) -> u64 {
         let token = self.tokens.get(&mint.to_string()).unwrap();
-        let scale = token.scale;        
-        scale
+                
+        token.scale
     }
 
     fn get_mints(&self) -> Vec<Pubkey> {

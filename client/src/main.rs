@@ -1,21 +1,21 @@
 use anchor_client::solana_client::rpc_client::RpcClient;
-use anchor_client::solana_client::rpc_config::RpcSendTransactionConfig;
+
 use anchor_client::solana_sdk::commitment_config::CommitmentConfig;
 use anchor_client::solana_sdk::pubkey::Pubkey;
 use anchor_client::solana_sdk::signature::{Keypair, Signer};
 use anchor_client::solana_sdk::signature::read_keypair_file;
 
-use anchor_client::{Client, Cluster, Program};
+use anchor_client::{Client, Cluster};
 
-use anchor_lang::Key;
-use solana_sdk::instruction::Instruction;
-use solana_sdk::transaction::Transaction;
+
+
+
 
 use std::rc::Rc;
 use std::str::FromStr;
 use std::collections::{HashMap, HashSet};
 use std::fmt::Debug;
-use std::sync::Arc;
+
 use std::vec;
 use std::borrow::Borrow;
 
@@ -23,13 +23,13 @@ use clap::Parser;
 
 use log::{info, warn};
 
-use tmp::accounts as tmp_accounts;
-use tmp::instruction as tmp_ix;
+
+
 
 use client::serialize::{
     token::unpack_token_account,
 };
-use client::utils::{str2pubkey, derive_token_address, read_json_dir};
+use client::utils::{derive_token_address, read_json_dir};
 use client::pool::{PoolType, PoolOperations, pool_factory, PoolDir};
 use client::constants::*;
 use client::arb::*;
@@ -48,14 +48,14 @@ fn add_pool_to_graph<'a>(
     quote: Rc<&'a mut Box<dyn PoolOperations>>
 ) {
     // idx0 = A, idx1 = B
-    if !graph.contains_key(&idx0) { // new A -> B
+    if let std::collections::hash_map::Entry::Vacant(e) = graph.entry(idx0) { // new A -> B
         let mut edges = HashMap::new(); 
         edges.insert(idx1, vec![quote]);
-        graph.insert(idx0, edges);
+        e.insert(edges);
     } else { // 
         let edges = graph.get_mut(&idx0).unwrap();
-        if !edges.contains_key(&idx1) { // new B
-            edges.insert(idx1, vec![quote]);
+        if let std::collections::hash_map::Entry::Vacant(e) = edges.entry(idx1) { // new B
+            e.insert(vec![quote]);
         } else { // new -> 
             let pool_quotes = edges.get_mut(&idx1).unwrap();
             pool_quotes.push(quote);
@@ -159,11 +159,11 @@ fn main() {
                 if !token_mints.contains(&mint) {
                     idx = token_mints.len();
                     mint2idx.insert(mint, idx);
-                    token_mints.push(mint.clone());
+                    token_mints.push(mint);
                     // graph_edges[idx] will always exist :)
                     graph_edges.push(HashSet::new());
                 } else { 
-                    idx = mint2idx.get(&mint).unwrap().clone();
+                    idx = *mint2idx.get(&mint).unwrap();
                 }
                 mint_idxs.push(idx);
             }
@@ -213,7 +213,7 @@ fn main() {
     let mut update_accounts = vec![];
     for token_addr_chunk in update_pks.chunks(99) {
         let accounts = connection
-            .get_multiple_accounts(&token_addr_chunk)
+            .get_multiple_accounts(token_addr_chunk)
             .unwrap();
         update_accounts.push(accounts);
     }
@@ -232,7 +232,7 @@ fn main() {
     for pool in pools.iter_mut() {
         // update pool 
         let length = update_pks_lengths[pool_count];
-        let account_slice = &update_accounts[account_ptr..account_ptr+length].to_vec();
+        let _account_slice = &update_accounts[account_ptr..account_ptr+length].to_vec();
         account_ptr += length; 
 
         // pool.set_update_accounts(*account_slice);
@@ -260,7 +260,7 @@ fn main() {
     };
 
     info!("searching for arbitrages...");
-    let min_swap_amount = 1 * 10_u128.pow(6 as u32); // scaled! -- 1 USDC
+    let min_swap_amount = 10_u128.pow(6_u32); // scaled! -- 1 USDC
     let mut swap_start_amount = init_token_balance; // scaled!
     let mut sent_arbs = HashSet::new();  // track what arbs we did with a larger size 
 

@@ -41,7 +41,7 @@ impl Serialize for WrappedPubkey {
 
 impl Clone for WrappedPubkey {
     fn clone(&self) -> Self {
-        WrappedPubkey(self.0.clone())
+        WrappedPubkey(self.0)
     }
 }
 
@@ -140,7 +140,8 @@ pub fn unpack_token_account(data: &[u8]) -> TokenAccount {
     let src = array_ref![data, 0, 165];
     let (mint, owner, amount, delegate, state, is_native, delegated_amount, close_authority) =
         array_refs![src, 32, 32, 8, 36, 1, 12, 8, 36];
-    let account = TokenAccount {
+    
+    TokenAccount {
         mint: Pubkey::new_from_array(*mint),
         owner: Pubkey::new_from_array(*owner),
         amount: u64::from_le_bytes(*amount),
@@ -150,6 +151,5 @@ pub fn unpack_token_account(data: &[u8]) -> TokenAccount {
         is_native: unpack_coption_u64(is_native).unwrap(),
         delegated_amount: u64::from_le_bytes(*delegated_amount),
         close_authority: unpack_coption_key(close_authority).unwrap(),
-    };
-    account
+    }
 }

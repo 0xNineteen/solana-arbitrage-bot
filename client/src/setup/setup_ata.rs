@@ -1,35 +1,35 @@
 use anchor_client::solana_client::rpc_client::RpcClient;
-use anchor_client::solana_client::rpc_config::RpcSendTransactionConfig;
+
 use anchor_client::solana_sdk::commitment_config::CommitmentConfig;
-use anchor_client::solana_sdk::pubkey::Pubkey;
-use anchor_client::solana_sdk::signature::{Keypair, Signer};
+
+use anchor_client::solana_sdk::signature::{Signer};
 use anchor_client::solana_sdk::signature::read_keypair_file;
 
-use anchor_client::{Client, Cluster, Program};
+use anchor_client::{Cluster};
 
 use solana_sdk::instruction::Instruction;
 use solana_sdk::transaction::Transaction;
 
-use std::rc::Rc;
-use std::str::FromStr;
-use std::collections::{HashMap, HashSet};
+
+
+
 use std::fmt::Debug;
 use std::vec;
 
 use solana_sdk::instruction::{AccountMeta};
 use solana_sdk::system_program;
 
-use clap::Parser;
 
-use log::{info, warn};
 
-use tmp::accounts as tmp_accounts;
-use tmp::instruction as tmp_ix;
+use log::{warn};
+
+
+
 
 use client::serialize::{
     token::unpack_token_account,
 };
-use client::utils::{str2pubkey, derive_token_address, read_json_dir};
+use client::utils::{derive_token_address, read_json_dir};
 use client::pool::{PoolType, PoolOperations, pool_factory};
 use client::constants::*;
 
@@ -44,7 +44,7 @@ fn main() {
 
     env_logger::init();
     let owner_kp_path = "../../../mainnet.key";     
-    let owner = read_keypair_file(owner_kp_path.clone()).unwrap();   
+    let owner = read_keypair_file(owner_kp_path.clone()).unwrap();
 
     // ** setup RPC connection 
     let connection = RpcClient::new_with_commitment(
@@ -89,7 +89,7 @@ fn main() {
             }
             for mint in pool_mints {
                 if !token_mints.contains(&mint) {
-                    token_mints.push(mint.clone());
+                    token_mints.push(mint);
                 }
             }
         }
@@ -107,16 +107,16 @@ fn main() {
     // max 100 accounts per get_multiple_accounts
     for token_addr_chunk in user_token_addrs.chunks(99) {
         let token_accounts = connection
-            .get_multiple_accounts(&token_addr_chunk)
+            .get_multiple_accounts(token_addr_chunk)
             .unwrap();
         for account in token_accounts {
             let amount = match account {
                 Some(account) => {
                     let data = account.data;
-                    let amount = unpack_token_account(&data).amount as i64;
-                    amount
+                    
+                    unpack_token_account(&data).amount as i64
                 }, 
-                None => { -1 as i64 } // no ATA! 
+                None => { -1_i64 } // no ATA! 
             };
             token_amounts.push(amount);
         }
@@ -147,7 +147,7 @@ fn main() {
         ];
         let ix = Instruction { 
             program_id: *ASSOCIATED_TOKEN_PROGRAM_ID, 
-            accounts: accounts, 
+            accounts, 
             data: vec![]
         };
 
@@ -160,7 +160,7 @@ fn main() {
         let tx = {
             let recent_hash = send_tx_connection.get_latest_blockhash().unwrap();
             Transaction::new_signed_with_payer(
-                &chunck_ixs,
+                chunck_ixs,
                 Some(&owner.pubkey()),
                 &[&owner],
                 recent_hash,

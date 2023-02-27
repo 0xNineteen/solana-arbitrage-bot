@@ -54,9 +54,9 @@ impl Stable {
         let fees = out_amount
             .checked_mul(self.fee_numerator).unwrap()
             .checked_div(self.fee_denominator).unwrap();
-        let scaled_quote = out_amount - fees;
+        
 
-        scaled_quote
+        out_amount - fees
     }
 }
 
