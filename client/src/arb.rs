@@ -5,8 +5,7 @@ use anchor_client::solana_sdk::pubkey::Pubkey;
 
 use anchor_client::solana_sdk::signature::{Keypair, Signer};
 use anchor_client::{Cluster, Program};
-use std::collections::{HashSet, HashMap};
-
+use std::collections::{HashMap, HashSet};
 
 use solana_sdk::instruction::Instruction;
 use solana_sdk::transaction::Transaction;
@@ -16,22 +15,19 @@ use std::rc::Rc;
 
 use std::vec;
 
-
-
-use log::{info};
+use log::info;
 
 use tmp::accounts as tmp_accounts;
 use tmp::instruction as tmp_ix;
 
+use crate::pool::PoolOperations;
 
-use crate::pool::{PoolOperations};
+use crate::utils::{derive_token_address, PoolGraph, PoolIndex, PoolQuote};
 
-use crate::utils::{derive_token_address};
-
-pub struct Arbitrager<'a> {
+pub struct Arbitrager {
     pub token_mints: Vec<Pubkey>,
     pub graph_edges: Vec<HashSet<usize>>, // used for quick searching over the graph
-    pub graph: HashMap<usize, HashMap<usize, Vec<Rc<&'a mut Box<dyn PoolOperations>>>>>,
+    pub graph: PoolGraph,
     pub cluster: Cluster,
     // vv -- need to clone these explicitly -- vv
     pub owner: Rc<Keypair>,
@@ -39,14 +35,14 @@ pub struct Arbitrager<'a> {
     pub connection: RpcClient,
 }
 
-impl Arbitrager<'_> {
+impl Arbitrager {
     pub fn brute_force_search(
         &self,
         start_mint_idx: usize,
         init_balance: u128,
         curr_balance: u128,
         path: Vec<usize>,
-        pool_path: Vec<Rc<&mut Box<dyn PoolOperations>>>,
+        pool_path: Vec<PoolQuote>,
         sent_arbs: &mut HashSet<String>,
     ) {
         let src_curr = path[path.len() - 1]; // last mint
@@ -63,9 +59,11 @@ impl Arbitrager<'_> {
         for dst_mint_idx in out_edges {
             let pools = self
                 .graph
-                .get(&src_curr)
+                .0
+                .get(&PoolIndex(src_curr))
                 .unwrap()
-                .get(dst_mint_idx)
+                .0
+                .get(&PoolIndex(*dst_mint_idx))
                 .unwrap();
 
             if path.contains(dst_mint_idx) && *dst_mint_idx != start_mint_idx {
@@ -77,7 +75,8 @@ impl Arbitrager<'_> {
 
             for pool in pools {
                 let new_balance =
-                    pool.get_quote_with_amounts_scaled(curr_balance, &src_mint, &dst_mint);
+                    pool.0
+                        .get_quote_with_amounts_scaled(curr_balance, &src_mint, &dst_mint);
 
                 let mut new_path = path.clone();
                 new_path.push(dst_mint_idx);
@@ -98,7 +97,7 @@ impl Arbitrager<'_> {
                         let mint_keys: Vec<String> =
                             new_path.clone().iter_mut().map(|i| i.to_string()).collect();
                         let pool_keys: Vec<String> =
-                            new_pool_path.iter().map(|p| p.get_name()).collect();
+                            new_pool_path.iter().map(|p| p.0.get_name()).collect();
                         let arb_key = format!("{}{}", mint_keys.join(""), pool_keys.join(""));
                         if sent_arbs.contains(&arb_key) {
                             info!("arb already sent...");
@@ -133,7 +132,7 @@ impl Arbitrager<'_> {
         &self,
         swap_start_amount: u128,
         mint_idxs: &Vec<usize>,
-        pools: &Vec<Rc<&mut Box<dyn PoolOperations>>>,
+        pools: &Vec<PoolQuote>,
     ) -> Vec<Instruction> {
         // gather swap ixs
         let mut ixs = vec![];
@@ -163,7 +162,9 @@ impl Arbitrager<'_> {
             let [mint0, mint1] = [self.token_mints[mint_idx0], self.token_mints[mint_idx1]];
             let pool = &pools[i];
 
-            let swap_ix = pool.swap_ix(&self.program, &self.owner.pubkey(), &mint0, &mint1);
+            let swap_ix = pool
+                .0
+                .swap_ix(&self.program, &self.owner.pubkey(), &mint0, &mint1);
             ixs.push(swap_ix);
         }
 
@@ -180,7 +181,7 @@ impl Arbitrager<'_> {
             .unwrap();
         ixs.push(ix);
 
-         // flatten to Vec<Instructions>
+        // flatten to Vec<Instructions>
         ixs.concat()
     }
 
