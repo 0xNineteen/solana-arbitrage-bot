@@ -1,14 +1,12 @@
 use anchor_client::solana_sdk::pubkey::Pubkey;
 use anchor_client::Program;
+use anchor_client::Cluster;
+
 use solana_sdk::instruction::Instruction;
 use solana_sdk::account::Account;
 
-use core::panic;
 use std::fmt::Debug;
 use crate::pools::*;
-
-use dyn_clone::{clone_trait_object, DynClone};
-use anchor_client::Cluster;
 
 #[derive(Debug)]
 pub struct PoolDir {

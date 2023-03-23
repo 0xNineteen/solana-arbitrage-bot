@@ -1,37 +1,35 @@
 use anchor_client::solana_client::rpc_client::RpcClient;
-use anchor_client::solana_client::rpc_config::RpcSendTransactionConfig;
+
 use anchor_client::solana_sdk::commitment_config::CommitmentConfig;
-use anchor_client::solana_sdk::pubkey::Pubkey;
+
 use anchor_client::solana_sdk::signature::{Keypair, Signer};
 use anchor_client::solana_sdk::signature::read_keypair_file;
 
-use anchor_client::{Client, Cluster, Program};
+use anchor_client::{Client, Cluster};
 
 use client::pools::SerumPool;
-use solana_sdk::instruction::Instruction;
+
 use solana_sdk::transaction::Transaction;
 
 use std::rc::Rc;
-use std::str::FromStr;
-use std::collections::{HashMap, HashSet};
-use std::fmt::Debug;
+
+use std::collections::{HashMap};
+
 use std::vec;
 
-use solana_sdk::instruction::{AccountMeta};
-use solana_sdk::system_program;
 
-use clap::Parser;
 
-use log::{info, warn};
+
+
+
+
 
 use tmp::accounts as tmp_accounts;
 use tmp::instruction as tmp_instructions;
 
-use client::serialize::{
-    token::unpack_token_account,
-};
-use client::utils::{str2pubkey, derive_token_address, read_json_dir};
-use client::pool::{PoolType, PoolOperations, pool_factory, PoolDir};
+
+use client::utils::{read_json_dir};
+use client::pool::{PoolType, PoolDir};
 use client::constants::*;
 
 use indicatif::ProgressBar;
@@ -51,7 +49,7 @@ fn main() {
     );
 
     let provider = Client::new_with_options(
-        cluster.clone(), 
+        cluster, 
         Rc::new(owner), 
         CommitmentConfig::confirmed() 
     );
@@ -140,7 +138,7 @@ fn main() {
             Err(e) => {
                 println!("error: {:#?}", e);
             }
-            Ok(v) => { }
+            Ok(_v) => { }
         }
 
         market_to_open_orders.insert(pool.own_address.0.to_string(), open_orders.pubkey().to_string());

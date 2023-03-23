@@ -45,7 +45,7 @@ pub fn get_pool_quote_with_amounts(
     } else if curve_type == CurveType::Stable { // stableswap (2 for orca)
         let swap_curve = SwapCurve {
             curve_type: CurveType::Stable,
-            calculator: Arc::new(StableCurve { amp: amp }),
+            calculator: Arc::new(StableCurve { amp }),
         };
         quote = swap_curve.swap(
             amount_in, 

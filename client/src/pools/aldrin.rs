@@ -56,7 +56,7 @@ impl PoolOperations for AldrinPool {
     fn swap_ix(&self, 
         program: &Program,
         owner: &Pubkey,
-        mint_in: &Pubkey, 
+        _mint_in: &Pubkey, 
         mint_out: &Pubkey
     ) -> Vec<Instruction> {
         let (state_pda, _) = Pubkey::find_program_address(
@@ -94,12 +94,12 @@ impl PoolOperations for AldrinPool {
                     pool_public_key: self.pool_public_key.0,
                     pool_signer: self.pool_signer.0,
                     pool_mint: self.pool_mint.0,
-                    base_token_vault: base_token_vault, 
-                    quote_token_vault: quote_token_vault, 
+                    base_token_vault, 
+                    quote_token_vault, 
                     fee_pool_token_account: self.fee_pool_token_account.0,
-                    user_transfer_authority: owner.clone(),
-                    user_base_ata: user_base_ata, 
-                    user_quote_ata: user_quote_ata,
+                    user_transfer_authority: *owner,
+                    user_base_ata, 
+                    user_quote_ata,
                     // ...
                     aldrin_v1_program: *ALDRIN_V1_PROGRAM_ID,
                     token_program: *TOKEN_PROGRAM_ID,
@@ -115,12 +115,12 @@ impl PoolOperations for AldrinPool {
                     pool_public_key: self.pool_public_key.0,
                     pool_signer: self.pool_signer.0,
                     pool_mint: self.pool_mint.0,
-                    base_token_vault: base_token_vault, 
-                    quote_token_vault: quote_token_vault, 
+                    base_token_vault, 
+                    quote_token_vault, 
                     fee_pool_token_account: self.fee_pool_token_account.0,
-                    user_transfer_authority: owner.clone(),
-                    user_base_ata: user_base_ata, 
-                    user_quote_ata: user_quote_ata,
+                    user_transfer_authority: *owner,
+                    user_base_ata, 
+                    user_quote_ata,
                     // ...
                     aldrin_v2_program: *ALDRIN_V2_PROGRAM_ID,
                     curve: self.curve.0,
@@ -165,7 +165,9 @@ impl PoolOperations for AldrinPool {
         };
 
         // get quote -- works for either constant product or stable swap 
-        let scaled_quote = get_pool_quote_with_amounts(
+        
+
+        get_pool_quote_with_amounts(
             scaled_amount_in,
             ctype,
             170, // from sdk 
@@ -173,28 +175,26 @@ impl PoolOperations for AldrinPool {
             pool_src_amount, 
             pool_dst_amount, 
             None,
-        ).unwrap();
-
-        scaled_quote
+        ).unwrap()
     }
 
     fn can_trade(&self, 
-        mint_in: &Pubkey,
-        mint_out: &Pubkey
+        _mint_in: &Pubkey,
+        _mint_out: &Pubkey
     ) -> bool {
         for amount in self.pool_amounts.values() {
             if *amount == 0 { return false; }
         }
-        return true;
+        true
     }
 
     fn get_name(&self) -> String {
-        let name = if self.pool_version == 1 { 
+        
+        if self.pool_version == 1 { 
             "AldrinV1".to_string()
         } else { 
             "AldrinV2".to_string()
-        };
-        name
+        }
     }
 
     fn get_update_accounts(&self) -> Vec<Pubkey> {
@@ -208,7 +208,7 @@ impl PoolOperations for AldrinPool {
         accounts 
     }
 
-    fn set_update_accounts(&mut self, accounts: Vec<Option<Account>>, cluster: Cluster) { 
+    fn set_update_accounts(&mut self, accounts: Vec<Option<Account>>, _cluster: Cluster) { 
         let ids: Vec<String> = self
             .get_mints()
             .iter()
@@ -229,14 +229,14 @@ impl PoolOperations for AldrinPool {
 
     fn mint_2_addr(&self, mint: &Pubkey) -> Pubkey {
         let token = self.tokens.get(&mint.to_string()).unwrap();
-        let addr = token.addr.0;
-        addr
+        
+        token.addr.0
     }
 
     fn mint_2_scale(&self, mint: &Pubkey) -> u64 {
         let token = self.tokens.get(&mint.to_string()).unwrap();
-        let scale = token.scale;        
-        scale
+                
+        token.scale
     }
 
     fn get_mints(&self) -> Vec<Pubkey> {

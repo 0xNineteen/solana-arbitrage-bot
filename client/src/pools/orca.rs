@@ -71,16 +71,16 @@ impl PoolOperations for OrcaPool {
             .accounts(tmp_accounts::OrcaSwap {
                 token_swap: self.address.0, 
                 authority: authority_pda,
-                user_transfer_authority: owner.clone(),
-                user_src: user_src,
-                pool_src: pool_src,
-                user_dst: user_dst,
-                pool_dst: pool_dst,
+                user_transfer_authority: *owner,
+                user_src,
+                pool_src,
+                user_dst,
+                pool_dst,
                 pool_mint: self.pool_token_mint.0,
                 fee_account: self.fee_account.0,
                 token_program: *TOKEN_PROGRAM_ID,
                 token_swap_program: *ORCA_PROGRAM_ID,
-                swap_state: swap_state,
+                swap_state,
             })
             .args(tmp_ix::OrcaSwap { })
             .instructions()
@@ -121,7 +121,9 @@ impl PoolOperations for OrcaPool {
         };
 
         // get quote -- works for either constant product or stable swap 
-        let scaled_quote = get_pool_quote_with_amounts(
+        
+        
+        get_pool_quote_with_amounts(
             scaled_amount_in,
             ctype,
             self.amp, 
@@ -129,9 +131,7 @@ impl PoolOperations for OrcaPool {
             *pool_src_amount, 
             *pool_dst_amount, 
             None,
-        ).unwrap();
-        
-        scaled_quote
+        ).unwrap()
     }
 
     fn get_update_accounts(&self) -> Vec<Pubkey> {
@@ -145,16 +145,16 @@ impl PoolOperations for OrcaPool {
     }
 
     fn can_trade(&self, 
-        mint_in: &Pubkey,
-        mint_out: &Pubkey
+        _mint_in: &Pubkey,
+        _mint_out: &Pubkey
     ) -> bool {
         for amount in self.pool_amounts.values() {
             if *amount == 0 { return false; }
         }
-        return true;
+        true
     }
 
-    fn set_update_accounts(&mut self, accounts: Vec<Option<Account>>, cluster: Cluster) { 
+    fn set_update_accounts(&mut self, accounts: Vec<Option<Account>>, _cluster: Cluster) { 
         let ids: Vec<String> = self
             .get_mints()
             .iter()
@@ -174,20 +174,20 @@ impl PoolOperations for OrcaPool {
     }
 
     fn get_name(&self) -> String {
-        let name = "Orca".to_string(); 
-        name
+         
+        "Orca".to_string()
     }
 
     fn mint_2_addr(&self, mint: &Pubkey) -> Pubkey {
         let token = self.tokens.get(&mint.to_string()).unwrap();
-        let addr = token.addr.0;
-        addr
+        
+        token.addr.0
     }
 
     fn mint_2_scale(&self, mint: &Pubkey) -> u64 {
         let token = self.tokens.get(&mint.to_string()).unwrap();
-        let scale = token.scale;        
-        scale
+                
+        token.scale
     }
 
     fn get_mints(&self) -> Vec<Pubkey> {

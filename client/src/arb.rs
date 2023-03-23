@@ -1,37 +1,23 @@
 use anchor_client::solana_client::rpc_client::RpcClient;
 use anchor_client::solana_client::rpc_config::RpcSendTransactionConfig;
-use anchor_client::solana_sdk::commitment_config::CommitmentConfig;
 use anchor_client::solana_sdk::pubkey::Pubkey;
 use anchor_client::solana_sdk::signature::{Keypair, Signer};
-use anchor_client::solana_sdk::signature::read_keypair_file;
+use anchor_client::{Cluster, Program};
 
-use anchor_client::{Client, Cluster, Program};
-
-use anchor_lang::Key;
 use solana_sdk::instruction::Instruction;
 use solana_sdk::transaction::Transaction;
 
 use std::rc::Rc;
-use std::str::FromStr;
 use std::collections::{HashMap, HashSet};
-use std::fmt::Debug;
-use std::sync::Arc;
 use std::vec;
 use std::borrow::Borrow;
-
-use clap::Parser;
-
-use log::{info, warn};
+use log::{info};
 
 use tmp::accounts as tmp_accounts;
 use tmp::instruction as tmp_ix;
 
-use client::serialize::{
-    token::unpack_token_account,
-};
-use client::utils::{str2pubkey, derive_token_address, read_json_dir};
-use client::pool::{PoolType, PoolOperations, pool_factory, PoolDir};
-use client::constants::*;
+use crate::utils::derive_token_address;
+use crate::pool::PoolOperations;
 
 pub struct Arbitrager<'a> {
     pub token_mints: Vec<Pubkey>, 
@@ -195,8 +181,8 @@ impl Arbitrager<'_> {
             .instructions().unwrap();
         ixs.push(ix);
 
-        let ixs = ixs.concat(); // flatten to Vec<Instructions>
-        return ixs 
+         // flatten to Vec<Instructions>
+        ixs.concat() 
     }
 
     fn send_ixs(
