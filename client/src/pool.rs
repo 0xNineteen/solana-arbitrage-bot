@@ -1,17 +1,17 @@
 use anchor_client::solana_sdk::pubkey::Pubkey;
 use anchor_client::Program;
-use anchor_client::Cluster;
-
-use solana_sdk::instruction::Instruction;
 use solana_sdk::account::Account;
+use solana_sdk::instruction::Instruction;
 
-use std::fmt::Debug;
 use crate::pools::*;
+use std::fmt::Debug;
+
+use anchor_client::Cluster;
 
 #[derive(Debug)]
 pub struct PoolDir {
     pub tipe: PoolType,
-    pub dir_path: String
+    pub dir_path: String,
 }
 
 #[derive(Debug)]
@@ -20,29 +20,29 @@ pub enum PoolType {
     MercurialPoolType,
     SaberPoolType,
     AldrinPoolType,
-    SerumPoolType
+    SerumPoolType,
 }
 
 pub fn pool_factory(tipe: &PoolType, json_str: &String) -> Box<dyn PoolOperations> {
     match tipe {
         PoolType::OrcaPoolType => {
-            let pool: OrcaPool = serde_json::from_str(json_str).unwrap(); 
+            let pool: OrcaPool = serde_json::from_str(json_str).unwrap();
             Box::new(pool)
-        }, 
+        }
         PoolType::MercurialPoolType => {
-            let pool: MercurialPool = serde_json::from_str(json_str).unwrap(); 
+            let pool: MercurialPool = serde_json::from_str(json_str).unwrap();
             Box::new(pool)
-        }, 
+        }
         PoolType::SaberPoolType => {
-            let pool: SaberPool = serde_json::from_str(json_str).unwrap(); 
+            let pool: SaberPool = serde_json::from_str(json_str).unwrap();
             Box::new(pool)
-        }, 
+        }
         PoolType::AldrinPoolType => {
-            let pool: AldrinPool = serde_json::from_str(json_str).unwrap(); 
+            let pool: AldrinPool = serde_json::from_str(json_str).unwrap();
             Box::new(pool)
-        }, 
+        }
         PoolType::SerumPoolType => {
-            let pool: SerumPool = serde_json::from_str(json_str).unwrap(); 
+            let pool: SerumPool = serde_json::from_str(json_str).unwrap();
             Box::new(pool)
         }
     }
@@ -58,23 +58,20 @@ pub trait PoolOperations: Debug {
     fn mint_2_scale(&self, mint: &Pubkey) -> u64;
 
     fn get_quote_with_amounts_scaled(
-        &self, 
-        amount_in: u128, 
+        &self,
+        amount_in: u128,
         mint_in: &Pubkey,
         mint_out: &Pubkey,
     ) -> u128;
-    fn swap_ix(&self, 
+    fn swap_ix(
+        &self,
         program: &Program,
         owner: &Pubkey,
-        mint_in: &Pubkey, 
-        mint_out: &Pubkey
+        mint_in: &Pubkey,
+        mint_out: &Pubkey,
     ) -> Vec<Instruction>;
 
-    fn can_trade(&self, 
-        mint_in: &Pubkey,
-        mint_out: &Pubkey
-    ) -> bool; // used for tests 
+    fn can_trade(&self, mint_in: &Pubkey, mint_out: &Pubkey) -> bool; // used for tests
 }
-
 
 // clone_trait_object!(PoolOperations);

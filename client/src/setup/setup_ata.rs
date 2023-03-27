@@ -44,7 +44,7 @@ fn main() {
 
     env_logger::init();
     let owner_kp_path = "../../../mainnet.key";     
-    let owner = read_keypair_file(owner_kp_path.clone()).unwrap();   
+    let owner = read_keypair_file(owner_kp_path.clone()).unwrap();
 
     // ** setup RPC connection 
     let connection = RpcClient::new_with_commitment(
