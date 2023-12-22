@@ -54,6 +54,7 @@ fn orca() {
     test_all_pool_quotes(pool_dir, pool_tipe);
 }
 
+#[allow(dead_code)]
 fn test_all_pool_quotes(
     pool_dir: String, 
     pool_tipe: PoolType,
@@ -67,7 +68,7 @@ fn test_all_pool_quotes(
 
     let owner_kp_path = "../mainnet-fork/localnet_owner.key";   
     // setup anchor things 
-    let owner = read_keypair_file(owner_kp_path.clone()).unwrap();
+    let owner = read_keypair_file(owner_kp_path).unwrap();
     println!("owner: {}", owner.pubkey());
 
     let provider = Client::new_with_options(
@@ -76,7 +77,7 @@ fn test_all_pool_quotes(
         CommitmentConfig::confirmed() 
     );
     let program = provider.program(*ARB_PROGRAM_ID);
-    let owner = read_keypair_file(owner_kp_path.clone()).unwrap();     
+    let owner = read_keypair_file(owner_kp_path).unwrap();     
 
     let pool_paths = read_json_dir(&pool_dir);
     let mut err_count = 0; 
@@ -258,7 +259,6 @@ fn test_pool_quote(
                     println!("quote: {amount_in} -> {quote_out_amount}");
                     println!("logs: {:#?}", s.value.logs);
                     panic!("ahhh");
-                    1
                 }, 
                 None => {
                     // parse logs for last output amount 
@@ -292,7 +292,6 @@ fn test_pool_quote(
             println!("pool path: {}", pool_path);
             println!("quote: {} -> {}", amount_in, quote_out_amount);
             panic!("ahhh");
-            1
         }
     }
 

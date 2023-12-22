@@ -81,7 +81,7 @@ fn main() {
         RpcClient::new_with_commitment(cluster.url(), CommitmentConfig::confirmed());
 
     // setup anchor things
-    let owner = read_keypair_file(owner_kp_path.clone()).unwrap();
+    let owner = read_keypair_file(owner_kp_path).unwrap();
     let rc_owner = Rc::new(owner);
     let provider = Client::new_with_options(
         cluster.clone(),

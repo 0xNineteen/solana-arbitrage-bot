@@ -19,7 +19,7 @@ use tmp::instruction as tmp_ix;
 use crate::pool_utils::base::CurveType;
 use crate::utils::{str2pubkey, derive_token_address};
 use crate::pool_utils::{
-    orca::{get_pool_quote_with_amounts},
+    orca::get_pool_quote_with_amounts,
     fees::Fees,
 };
 use crate::constants::*;

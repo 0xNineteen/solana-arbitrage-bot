@@ -12,14 +12,11 @@ pub fn read_json_dir(dir: &String) -> Vec<String> {
     for path in _paths {
         let p = path.unwrap().path();
         let path_str = p;
-        match path_str.extension() {
-            Some(ex) => {
-                if ex == "json" {
-                    let path = path_str.to_str().unwrap().to_string();
-                    paths.push(path);
-                }
+        if let Some(ex) = path_str.extension() {
+            if ex == "json" {
+                let path = path_str.to_str().unwrap().to_string();
+                paths.push(path);
             }
-            None => {}
         }
     }
     paths
@@ -62,5 +59,11 @@ pub struct PoolEdge(pub HashMap<PoolIndex, Vec<PoolQuote>>);
 impl PoolGraph {
     pub fn new() -> Self {
         Self(HashMap::new())
+    }
+}
+
+impl Default for PoolGraph {
+    fn default() -> Self {
+        Self::new()
     }
 }

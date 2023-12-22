@@ -23,7 +23,7 @@ pub enum PoolType {
     SerumPoolType,
 }
 
-pub fn pool_factory(tipe: &PoolType, json_str: &String) -> Box<dyn PoolOperations> {
+pub fn pool_factory(tipe: &PoolType, json_str: &str) -> Box<dyn PoolOperations> {
     match tipe {
         PoolType::OrcaPoolType => {
             let pool: OrcaPool = serde_json::from_str(json_str).unwrap();

@@ -5,14 +5,14 @@ use std::fmt::Debug;
 use serde;
 use serde::{Deserialize, Serialize};
 use crate::pool::PoolOperations;
-use crate::serialize::token::{WrappedPubkey};
+use crate::serialize::token::WrappedPubkey;
 
-use crate::utils::{derive_token_address}; 
+use crate::utils::derive_token_address; 
 
 use solana_sdk::pubkey::Pubkey;
 
 use anchor_spl::dex::serum_dex::{
-    critbit::{SlabView},
+    critbit::SlabView,
     matching::OrderBookState,
     state::Market,
 };
@@ -28,9 +28,7 @@ use solana_sdk::account_info::AccountInfo;
 use crate::constants::*;
 use crate::pool_utils::serum::*;
 
-use anchor_spl::dex::serum_dex::{
-    matching::Side,
-};
+use anchor_spl::dex::serum_dex::matching::Side;
 
 use std::str::FromStr;
 use tmp::accounts as tmp_accounts;
@@ -91,10 +89,7 @@ fn bid_iteration(
     let mut pc_qty_remaining = max_pc_qty; 
 
     let done = loop {
-        let flag = match ob.asks.find_min() { // min = best ask 
-            Some(_) => false, 
-            None => true
-        };
+        let flag = ob.asks.find_min().is_none();
         if flag { break true; }
         let best_ask = ob.asks.find_min().unwrap(); 
         let best_offer_ref = ob.asks.get_mut(best_ask).unwrap().as_leaf_mut().unwrap();
@@ -210,7 +205,7 @@ impl PoolOperations for SerumPool {
             }, 
             Cluster::Mainnet => {
                 panic!("TODO"); // idk 
-                "./serum_open_orders.json"
+                // "./serum_open_orders.json"
             },
             _ => panic!("clsuter {} not supported", cluster)
         };
@@ -393,16 +388,10 @@ impl PoolOperations for SerumPool {
         // is there a bid or ask we can trade with??? 
         if *mint_in == self.quote_mint.0 {
             // bid: quote -> base
-            match asks.find_min() { // min = best ask 
-                Some(_) => true, 
-                None => false
-            }
+            asks.find_min().is_some()
         } else if *mint_in == self.base_mint.0 {
             // ask: base -> quote
-            match bids.find_max() {
-                Some(_) => true, 
-                None => false
-            }
+            bids.find_max().is_some()
 
         } else { 
             panic!("invalid mints");

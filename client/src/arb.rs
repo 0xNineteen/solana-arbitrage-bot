@@ -5,7 +5,7 @@ use anchor_client::solana_sdk::pubkey::Pubkey;
 
 use anchor_client::solana_sdk::signature::{Keypair, Signer};
 use anchor_client::{Cluster, Program};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 use solana_sdk::instruction::Instruction;
 use solana_sdk::transaction::Transaction;
@@ -19,8 +19,6 @@ use log::info;
 
 use tmp::accounts as tmp_accounts;
 use tmp::instruction as tmp_ix;
-
-use crate::pool::PoolOperations;
 
 use crate::utils::{derive_token_address, PoolGraph, PoolIndex, PoolQuote};
 
@@ -132,7 +130,7 @@ impl Arbitrager {
         &self,
         swap_start_amount: u128,
         mint_idxs: &Vec<usize>,
-        pools: &Vec<PoolQuote>,
+        pools: &[PoolQuote],
     ) -> Vec<Instruction> {
         // gather swap ixs
         let mut ixs = vec![];
