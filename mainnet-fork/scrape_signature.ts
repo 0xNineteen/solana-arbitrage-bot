@@ -3,7 +3,6 @@ import * as web3 from "@solana/web3.js";
 import { Buffer } from 'buffer';
 
 const fs = require('fs');
-import { AccountLayout } from "@solana/spl-token";
 
 async function main() {
     let connection = new web3.Connection("https://api.mainnet-beta.solana.com")

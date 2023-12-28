@@ -1,7 +1,5 @@
 import * as token from "@solana/spl-token"
 import * as web3 from "@solana/web3.js"
-import { Keypair, Connection, PublicKey, Signer } from '@solana/web3.js'
-import { TOKEN_PROGRAM_ID, AccountLayout } from '@solana/spl-token'
 var fs = require('fs');
 
 async function main() {

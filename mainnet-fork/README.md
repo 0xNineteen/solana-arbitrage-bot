@@ -6,7 +6,7 @@
 - `scrape_signature.ts`: scrapes all programs + accounts in signature 
 - `setup_validator.py`: downloads all programs + accounts which were scraped + constructs `start_localnet.sh` 
 - `start_localnet.sh`: starts `solana-test-validator` with all preloaded things
-    - `bash start_localnet.sh`
+- `bash start_localnet.sh`
 - `orca_swap.ts`: interact with mainnet orca pools from downloaded signature
 
 - NOTE: need `sh -c "$(curl -sSfL https://release.solana.com/v1.14.13/install)"` 
