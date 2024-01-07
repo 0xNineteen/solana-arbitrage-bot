@@ -19,6 +19,7 @@
     "decimal.js": "^10.3.1"
   },
   "devDependencies": {
+    "@aldrin_exchange/sdk": "^0.4.51",
     "@types/bn.js": "^4.11.6",
     "@types/decimal.js": "^7.4.0",
     "@types/node": "^12.0.0",
