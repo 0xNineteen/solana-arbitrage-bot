@@ -131,7 +131,6 @@ async function main() {
       let dataTyped = data as Root;
 
       dataTyped.pools.forEach((pool) => {
-        console.log(pool.id);
         let saberPool = <SaberPool>{};
         saberPool.authority = pool.swap.config.authority;
         saberPool.pool_account = pool.swap.config.swapAccount;
@@ -154,7 +153,7 @@ async function main() {
           addr: pool.swap.state.tokenB.reserve,
           scale: pool.tokens[1].decimals,
         };
-        saberPool.target_amp = parseFloat(pool.swap.state.targetAmpFactor);
+        saberPool.target_amp = parseInt("0x" + pool.swap.state.targetAmpFactor);
         saberPool.fee_numerator = parseInt(
           pool.swap.state.fees.trade.numeratorStr
         );
@@ -167,9 +166,7 @@ async function main() {
         saberPool.fee_accounts[pool.swap.state.tokenB.mint] =
           pool.swap.state.tokenB.adminFeeAccount;
         fs.writeFile(
-          "../pools/saber_new/" +
-            pool.swap.config.swapAccount +
-            "_saber_pool.json",
+          "../pools/saber/" + pool.swap.config.swapAccount + "_saber_pool.json",
           JSON.stringify(saberPool),
           "utf8",
           () => {}

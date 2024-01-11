@@ -19,7 +19,7 @@ async function main() {
     );
     console.log(market.decoded);
     fs.writeFile(
-      "../pools/serum_new/" + market.address.toString() + "_serum_dex.json",
+      "../pools/serum/" + market.address.toString() + "_serum_dex.json",
       JSON.stringify(market.decoded),
       "utf8",
       () => {}

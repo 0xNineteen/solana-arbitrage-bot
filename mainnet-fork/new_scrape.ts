@@ -166,7 +166,7 @@ async function main() {
   let serum_pid = "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin";
   programs.push(serum_pid);
 
-  let serum_pools = "../pools/serum_new/";
+  let serum_pools = "../pools/serum/";
   let serum_pool_names = await read_dir_names(serum_pools);
   let serum_count = 0;
   for (let name of serum_pool_names) {

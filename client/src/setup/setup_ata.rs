@@ -2,10 +2,10 @@ use anchor_client::solana_client::rpc_client::RpcClient;
 
 use anchor_client::solana_sdk::commitment_config::CommitmentConfig;
 
-use anchor_client::solana_sdk::signature::{Signer};
+use anchor_client::solana_sdk::signature::Signer;
 use anchor_client::solana_sdk::signature::read_keypair_file;
 
-use anchor_client::{Cluster};
+use anchor_client::Cluster;
 
 use solana_sdk::instruction::Instruction;
 use solana_sdk::transaction::Transaction;
@@ -16,19 +16,17 @@ use solana_sdk::transaction::Transaction;
 use std::fmt::Debug;
 use std::vec;
 
-use solana_sdk::instruction::{AccountMeta};
+use solana_sdk::instruction::AccountMeta;
 use solana_sdk::system_program;
 
 
 
-use log::{warn};
+use log::warn;
 
 
 
 
-use client::serialize::{
-    token::unpack_token_account,
-};
+use client::serialize::token::unpack_token_account;
 use client::utils::{derive_token_address, read_json_dir};
 use client::pool::{PoolType, PoolOperations, pool_factory};
 use client::constants::*;

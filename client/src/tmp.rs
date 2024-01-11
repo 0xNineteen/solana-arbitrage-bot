@@ -158,7 +158,7 @@ fn main() {
     // let pool_path = "../../serum/serum_pools/ByRys5tuUWDgL73G8JBAEfkdFf8JWBzPBDHsBVQ5vbQA_serum_dex.json";
     // let pool_path = "../../serum/serum_pools/8PMHyKJ5FycCopijj6eXeCkenB71CYxCKH7AibkksdG5_serum_dex.json";
     let pool_path =
-        "../../serum/serum_pools/7dLVkUfBVfCGkFhSXDCq1ukM9usathSgS716t643iFGF_serum_dex.json";
+        "../pools/serum/7dLVkUfBVfCGkFhSXDCq1ukM9usathSgS716t643iFGF_serum_dex.json";
     let _pool_tipe = PoolType::SerumPoolType;
 
     let contents = std::fs::read_to_string(pool_path).unwrap();

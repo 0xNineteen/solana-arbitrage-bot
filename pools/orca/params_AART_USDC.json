@@ -27,7 +27,7 @@
   },
   "curveType": 0,
   "feeStructure": {
-    "traderFee": { "numerator": "19", "denominator": "2710" },
-    "ownerFee": { "numerator": "05", "denominator": "2710" }
+    "traderFee": { "numerator": 25, "denominator": 10000 },
+    "ownerFee": { "numerator": 5, "denominator": 10000 }
   }
 }

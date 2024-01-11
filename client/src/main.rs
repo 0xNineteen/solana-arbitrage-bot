@@ -61,16 +61,14 @@ fn main() {
 
     let owner_kp_path = match cluster {
         Cluster::Localnet => "../../mainnet_fork/localnet_owner.key",
-        Cluster::Mainnet => {
-            "/Users/edgar/.config/solana/uwuU3qc2RwN6CpzfBAhg6wAxiEx138jy5wB3Xvx18Rw.json"
-        }
+        Cluster::Mainnet => "/Users/ggrigori/solana/wallets/my_solana_wallet/my-keypair.json",
         _ => panic!("shouldnt get here"),
     };
 
     // ** setup RPC connection
     let connection_url = match cluster {
         Cluster::Mainnet => {
-            "https://mainnet.rpc.jito.wtf/?access-token=746bee55-1b6f-4130-8347-5e1ea373333f"
+            "https://methodical-soft-card.solana-mainnet.quiknode.pro/91b29303c21bce424386b919f222da4f4358374a/"
         }
         _ => cluster.url(),
     };

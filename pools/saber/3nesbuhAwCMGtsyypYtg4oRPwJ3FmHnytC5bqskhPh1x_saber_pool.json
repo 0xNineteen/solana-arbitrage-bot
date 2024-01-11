@@ -22,7 +22,7 @@
       "scale": 6
     }
   },
-  "target_amp": null,
+  "target_amp": 250,
   "fee_numerator": 4,
   "fee_denominator": 10000,
   "fee_accounts": {
