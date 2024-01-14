@@ -16,8 +16,8 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-anchor-lang = "0.22.1"
+anchor-lang = "0.29.0"
 solana-program = "1.9.9"
 # https://github.com/project-serum/anchor/tree/master/spl
-anchor-spl = {version="0.22.1", features=["dex"]}
+anchor-spl = {version="0.29.0", features=["dex"]}
 sha2 = "0.10.2"

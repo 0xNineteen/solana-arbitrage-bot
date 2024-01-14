@@ -35,6 +35,7 @@ describe("tmp", () => {
             [wallet.publicKey.toBuffer(), token.TOKEN_PROGRAM_ID.toBuffer(), token.NATIVE_MINT.toBuffer()],
             token.ASSOCIATED_TOKEN_PROGRAM_ID
         ))[0];
+        console.log("WSOL ATA:", src_token_account.toString())
         
         let amount_in = 1 * web3.LAMPORTS_PER_SOL;
         // go SOL -> WSOL 
@@ -61,6 +62,7 @@ describe("tmp", () => {
             let amount1 = (await connection.getTokenAccountBalance(src_token_account)).value.uiAmount
     
             console.log(amount0, amount1)
+            console.log("added wsol")
             assert(amount1 > amount0);
         } else {
             console.log("already has WSOL:", amount0);
