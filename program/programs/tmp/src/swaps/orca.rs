@@ -64,22 +64,30 @@ pub fn _orca_swap<'info>(
 
 #[derive(Accounts)]
 pub struct OrcaSwap<'info> {
+    /// CHECK: bypass
     pub token_swap: AccountInfo<'info>,
+    /// CHECK: bypass
     pub authority: AccountInfo<'info>,
     pub user_transfer_authority : Signer<'info>,
     #[account(mut)]
     pub user_src: Account<'info, TokenAccount>,
     #[account(mut)]
+    /// CHECK: bypass
     pub pool_src: AccountInfo<'info>,
     #[account(mut)]
+    /// CHECK: bypass
     pub pool_dst: AccountInfo<'info>,
     #[account(mut)]
     pub user_dst: Account<'info, TokenAccount>,
     #[account(mut)]
+    /// CHECK: bypass
     pub pool_mint: AccountInfo<'info>,
     #[account(mut)]
+    /// CHECK: bypass
     pub fee_account: AccountInfo<'info>,
+    /// CHECK: bypass
     pub token_program: AccountInfo<'info>,
+    /// CHECK: bypass
     pub token_swap_program: AccountInfo<'info>,
     #[account(mut, seeds=[b"swap_state"], bump)] 
     pub swap_state: Account<'info, SwapState>,

@@ -25,7 +25,7 @@ describe("tmp", () => {
     anchor.setProvider(provider);
     const program = anchor.workspace.Tmp as Program<Tmp>;
 
-    let rawdata = fs.readFileSync(`../mainnet-fork/localnet_owner.key`, 'utf8');  
+    let rawdata = fs.readFileSync(`local_key/id.json`, 'utf8');  
     let owner_secret = new Uint8Array(JSON.parse(rawdata));
     let wallet = web3.Keypair.fromSecretKey(owner_secret);
 

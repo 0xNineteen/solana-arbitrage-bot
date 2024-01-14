@@ -149,22 +149,30 @@ pub fn _aldrin_swap_v2<'info>(
 
 #[derive(Accounts)]
 pub struct AldrinSwapV1<'info> {
+    /// CHECK: bypass
     pub pool_public_key: AccountInfo<'info>,
+    /// CHECK: bypass
     pub pool_signer: AccountInfo<'info>,
     #[account(mut)]
+    /// CHECK: bypass
     pub pool_mint: AccountInfo<'info>,
     #[account(mut)]
+    /// CHECK: bypass
     pub base_token_vault: AccountInfo<'info>,
     #[account(mut)]
+    /// CHECK: bypass
     pub quote_token_vault: AccountInfo<'info>,
     #[account(mut)]
+    /// CHECK: bypass
     pub fee_pool_token_account: AccountInfo<'info>,
     pub user_transfer_authority : Signer<'info>,
     #[account(mut)]
     pub user_base_ata: Account<'info, TokenAccount>,
     #[account(mut)]
     pub user_quote_ata: Account<'info, TokenAccount>,
+    /// CHECK: bypass
     pub aldrin_v1_program: AccountInfo<'info>,
+    /// CHECK: bypass
     pub token_program: AccountInfo<'info>,
     #[account(mut, seeds=[b"swap_state"], bump)] 
     pub swap_state: Account<'info, SwapState>,
@@ -172,23 +180,32 @@ pub struct AldrinSwapV1<'info> {
 
 #[derive(Accounts)]
 pub struct AldrinSwapV2<'info> {
+    /// CHECK: bypass
     pub pool_public_key: AccountInfo<'info>,
+    /// CHECK: bypass
     pub pool_signer: AccountInfo<'info>,
     #[account(mut)]
+    /// CHECK: bypass
     pub pool_mint: AccountInfo<'info>,
     #[account(mut)]
+    /// CHECK: bypass
     pub base_token_vault: AccountInfo<'info>,
     #[account(mut)]
+    /// CHECK: bypass
     pub quote_token_vault: AccountInfo<'info>,
     #[account(mut)]
+    /// CHECK: bypass
     pub fee_pool_token_account: AccountInfo<'info>,
     pub user_transfer_authority : Signer<'info>,
     #[account(mut)]
     pub user_base_ata: Account<'info, TokenAccount>,
     #[account(mut)]
     pub user_quote_ata: Account<'info, TokenAccount>,
+    /// CHECK: bypass
     pub aldrin_v2_program: AccountInfo<'info>,
+    /// CHECK: bypass
     pub curve: AccountInfo<'info>, // v2 difference! 
+    /// CHECK: bypass
     pub token_program: AccountInfo<'info>,
     #[account(mut, seeds=[b"swap_state"], bump)] 
     pub swap_state: Account<'info, SwapState>,

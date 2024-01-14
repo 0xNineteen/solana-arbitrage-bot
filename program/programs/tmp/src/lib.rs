@@ -4,7 +4,7 @@ use anchor_spl::{
 };
 use anchor_lang::Accounts;
 
-declare_id!("CRQXfRGq3wTkjt7JkqhojPLiKLYLjHPGLebnfiiQB46T");
+declare_id!("2S9EXVB1Q9YQNTBJL46meffVS7go2pDHMkvcWVu9maqm");
 
 use state::SwapState;
 use error::ErrorCode; 
@@ -175,6 +175,7 @@ pub fn prepare_swap(
 pub struct InitSwapState<'info> {
     #[account(
         init, 
+        space=8,
         payer=payer,
         seeds=[b"swap_state"], 
         bump, 

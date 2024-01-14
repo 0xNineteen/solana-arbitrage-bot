@@ -43,11 +43,16 @@ pub fn _serum_swap<'info>(
 #[derive(Accounts)]
 pub struct InitOpenOrder<'info> {
     #[account(mut)]
+    /// CHECK: bypass
     pub open_orders: AccountInfo<'info>,
     #[account(signer)]
+    /// CHECK: bypass
     pub authority: AccountInfo<'info>,
+    /// CHECK: bypass
     pub market: AccountInfo<'info>,
+    /// CHECK: bypass
     pub dex_program: AccountInfo<'info>,
+    /// CHECK: bypass
     pub rent: AccountInfo<'info>,
 }
 
@@ -65,12 +70,17 @@ impl<'info> From<&mut InitOpenOrder<'info>> for dex::InitOpenOrders<'info> {
 #[derive(Accounts)]
 pub struct CloseAccount<'info> {
     #[account(mut)]
+    /// CHECK: bypass
     open_orders: AccountInfo<'info>,
     #[account(signer)]
+    /// CHECK: bypass
     authority: AccountInfo<'info>,
     #[account(mut)]
+    /// CHECK: bypass
     destination: AccountInfo<'info>,
+    /// CHECK: bypass
     market: AccountInfo<'info>,
+    /// CHECK: bypass
     dex_program: AccountInfo<'info>,
 }
 
@@ -92,13 +102,17 @@ impl<'info> From<&mut CloseAccount<'info>> for dex::CloseOpenOrders<'info> {
 pub struct SerumSwap<'info> {
     pub market: MarketAccounts<'info>,
     #[account(signer)]
+    /// CHECK: bypass
     pub authority: AccountInfo<'info>,
     #[account(mut)]
     pub pc_wallet: Account<'info, TokenAccount>, // !! 
     // Programs.
+    /// CHECK: bypass
     pub dex_program: AccountInfo<'info>,
+    /// CHECK: bypass
     pub token_program: AccountInfo<'info>,
     // Sysvars.
+    /// CHECK: bypass
     pub rent: AccountInfo<'info>,
     #[account(mut, seeds=[b"swap_state"], bump, )] 
     pub swap_state: Account<'info, SwapState>,
@@ -121,10 +135,15 @@ impl<'info> From<&SerumSwap<'info>> for OrderbookClient<'info> {
 #[derive(Clone)]
 struct OrderbookClient<'info> {
     market: MarketAccounts<'info>,
+    /// CHECK: bypass
     authority: AccountInfo<'info>,
+    /// CHECK: bypass
     pc_wallet: AccountInfo<'info>,
+    /// CHECK: bypass
     dex_program: AccountInfo<'info>,
+    /// CHECK: bypass
     token_program: AccountInfo<'info>,
+    /// CHECK: bypass
     rent: AccountInfo<'info>,
 }
 
@@ -266,32 +285,42 @@ fn coin_lots(market: &MarketState, size: u64) -> u64 {
 #[derive(Accounts, Clone)]
 pub struct MarketAccounts<'info> {
     #[account(mut)]
+    /// CHECK: bypass
     pub market: AccountInfo<'info>,
     #[account(mut)]
+    /// CHECK: bypass
     pub open_orders: AccountInfo<'info>,
     #[account(mut)]
+    /// CHECK: bypass
     pub request_queue: AccountInfo<'info>,
     #[account(mut)]
+    /// CHECK: bypass
     pub event_queue: AccountInfo<'info>,
     #[account(mut)]
+    /// CHECK: bypass
     pub bids: AccountInfo<'info>,
     #[account(mut)]
+    /// CHECK: bypass
     pub asks: AccountInfo<'info>,
     // The `spl_token::Account` that funds will be taken from, i.e., transferred
     // from the user into the market's vault.
     //
     // For bids, this is the base currency. For asks, the quote.
     #[account(mut)]
+    /// CHECK: bypass
     pub order_payer_token_account: AccountInfo<'info>,
     // Also known as the "base" currency. For a given A/B market,
     // this is the vault for the A mint.
     #[account(mut)]
+    /// CHECK: bypass
     pub coin_vault: AccountInfo<'info>,
     // Also known as the "quote" currency. For a given A/B market,
     // this is the vault for the B mint.
     #[account(mut)]
+    /// CHECK: bypass
     pub pc_vault: AccountInfo<'info>,
     // PDA owner of the DEX's token accounts for base + quote currencies.
+    /// CHECK: bypass
     pub vault_signer: AccountInfo<'info>,
     // User wallets.
     #[account(mut)]
