@@ -15,7 +15,7 @@
 # fi
 
 # airdrop some lamports to the new keypair
-# solana config set -k local_key/id.json
+solana config set -k ../mainnet-fork/localnet_owner.key
 # solana airdrop 20
 
 # # deploy the program

@@ -1,7 +1,5 @@
 use anchor_lang::prelude::*;
-use anchor_spl::{
-    token::{TokenAccount}
-};
+use anchor_spl::token::TokenAccount;
 use anchor_lang::Accounts;
 
 declare_id!("2S9EXVB1Q9YQNTBJL46meffVS7go2pDHMkvcWVu9maqm");
@@ -21,6 +19,7 @@ pub mod tmp {
     use super::*;
 
     pub fn init_program(ctx: Context<InitSwapState>) -> Result<()> {
+        msg!("init program");
         let swap_state = &mut ctx.accounts.swap_state;
         swap_state.swap_input = 0;
         swap_state.is_valid = false;  
@@ -172,10 +171,11 @@ pub fn prepare_swap(
 }
 
 #[derive(Accounts)]
+#[instruction(bump: u8)]
 pub struct InitSwapState<'info> {
     #[account(
         init, 
-        space=8,
+        space=8 + SwapState::MAX_SIZE,
         payer=payer,
         seeds=[b"swap_state"], 
         bump, 

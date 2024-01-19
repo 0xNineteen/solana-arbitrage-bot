@@ -1,4 +1,3 @@
-#%%
 import json 
 import os 
 
@@ -18,4 +17,5 @@ for prog in programs:
     local_validator_command += " --bpf-program {} programs/{}.so ".format(prog, prog)
 
 with open('start_localnet.sh', 'w') as f:
+    f.write("#!/bin/bash\n")
     f.write(local_validator_command)

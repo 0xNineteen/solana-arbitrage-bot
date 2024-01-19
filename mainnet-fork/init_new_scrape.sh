@@ -1,3 +1,6 @@
+#!/bin/bash
+
+source .venv/bin/activate
 rm accounts/* 
 npx ts-node new_scrape.ts &&
 python setup_validator.py &&

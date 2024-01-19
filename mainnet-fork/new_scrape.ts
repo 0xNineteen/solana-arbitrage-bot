@@ -55,7 +55,7 @@ export const AccountLayout = struct<token.AccountInfo>([
 
 async function main() {
   let connection = new web3.Connection(
-    "https://capable-hardworking-borough.solana-devnet.quiknode.pro/d160d13390e06cfaf07d3b433188e5b79a25fe39/"
+    "https://methodical-soft-card.solana-mainnet.quiknode.pro/91b29303c21bce424386b919f222da4f4358374a/"
   );
   let programs = [];
   let accounts = [];
