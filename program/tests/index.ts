@@ -138,10 +138,9 @@ describe("tmp", () => {
       [Buffer.from("swap_state")],
       program.programId
     );
-    console.log("pda:", state_pda.toString());
     let info = await connection.getAccountInfo(state_pda);
     if (info == null) {
-      console.log("initializing pda...");
+      console.log("initializing pda...", state_pda.toString());
       await program.rpc.initProgram({
         accounts: {
           swapState: state_pda,
@@ -150,7 +149,7 @@ describe("tmp", () => {
         },
       });
     } else {
-      console.log("pda already initialized...");
+      console.log("pda already initialized...", state_pda.toString());
     }
   });
 

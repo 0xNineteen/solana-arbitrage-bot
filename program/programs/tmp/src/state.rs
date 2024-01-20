@@ -9,5 +9,5 @@ pub struct SwapState {
 }
 
 impl SwapState {
-    pub const MAX_SIZE: usize = 1 + 8 + 8 + 1;
+    pub const MAX_SIZE: usize = 8 + 8 + 1;
 }

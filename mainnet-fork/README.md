@@ -4,14 +4,13 @@
 
 - `bash get_pools.sh` to update the pools (it's optional if you want to update the pools data)
 - `bash init_new_scrape.sh`: start local val with all scrapped accounts
-- `bash setup.sh`: setup + fund all ATAs of owner + deploy and init anchor ARB program
+- `bash setup.sh`: setup + fund all ATAs of owner + deploy and init anchor ARB program (run in a separate terminal)
 
 ### More Details (maybe outdated)
 
 - `scrape_signature.ts`: scrapes all programs + accounts in signature
 - `setup_validator.py`: downloads all programs + accounts which were scraped + constructs `start_localnet.sh`
 - `start_localnet.sh`: starts `solana-test-validator` with all preloaded things
-- `bash start_localnet.sh`
 - `orca_swap.ts`: interact with mainnet orca pools from downloaded signature
 
 - NOTE: need `sh -c "$(curl -sSfL https://release.solana.com/v1.14.13/install)"`

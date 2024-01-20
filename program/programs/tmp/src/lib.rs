@@ -171,7 +171,6 @@ pub fn prepare_swap(
 }
 
 #[derive(Accounts)]
-#[instruction(bump: u8)]
 pub struct InitSwapState<'info> {
     #[account(
         init, 
