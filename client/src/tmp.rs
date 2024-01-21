@@ -5,6 +5,7 @@ use anchor_client::solana_sdk::signature::read_keypair_file;
 use anchor_client::solana_sdk::signature::{Keypair, Signer};
 use anchor_client::{Client, Cluster};
 
+use client::pool_utils::serum::FeeTier;
 use client::pools::SerumPool;
 
 use solana_sdk::transaction::Transaction;
@@ -18,13 +19,8 @@ use std::vec;
 use tmp::accounts as tmp_accounts;
 use tmp::instruction as tmp_instructions;
 
-use sha2::Digest;
-
-use anchor_lang::prelude::*;
-
 use client::constants::*;
 use client::pool::PoolType;
-use client::pool_utils::serum::*;
 use client::utils::derive_token_address;
 
 use solana_sdk::account::Account;
@@ -60,15 +56,9 @@ fn bid_iteration(iteration: &mut Iteration, fee_tier: &FeeTier, ob: &mut OrderBo
     let max_pc_qty = fee_tier.remove_taker_fee(iteration.amount_in) / quote_lot_size;
     let mut pc_qty_remaining = max_pc_qty;
 
-    let done = loop {
-        let flag = match ob.asks.find_min() {
-            // min = best ask
-            Some(_) => false,
-            None => true,
-        };
-        if flag {
-            break true;
-        }
+    let done = if ob.asks.find_min().is_none() {
+        true
+    } else {
         let best_ask = ob.asks.find_min().unwrap();
         let best_offer_ref = ob.asks.get_mut(best_ask).unwrap().as_leaf_mut().unwrap();
 
@@ -78,21 +68,21 @@ fn bid_iteration(iteration: &mut Iteration, fee_tier: &FeeTier, ob: &mut OrderBo
 
         println!("best ask {}", trade_price);
 
-        if trade_qty == 0 {
+        if trade_qty != 0 {
+            pc_qty_remaining -= trade_qty * trade_price.get();
+            iteration.amount_out += trade_qty;
+
+            best_offer_ref.set_quantity(best_offer_ref.quantity() - trade_qty);
+
+            if best_offer_ref.quantity() == 0 {
+                let best_offer_id = best_offer_ref.order_id();
+                ob.asks.remove_by_key(best_offer_id).unwrap();
+            }
+            false
+        } else {
             // fin
-            break true;
+            true
         }
-
-        pc_qty_remaining -= trade_qty * trade_price.get();
-        iteration.amount_out += trade_qty;
-
-        best_offer_ref.set_quantity(best_offer_ref.quantity() - trade_qty);
-
-        if best_offer_ref.quantity() == 0 {
-            let best_offer_id = best_offer_ref.order_id();
-            ob.asks.remove_by_key(best_offer_id).unwrap();
-        }
-        break false;
     };
 
     let native_accum_fill_price = (max_pc_qty - pc_qty_remaining) * quote_lot_size;
@@ -103,6 +93,7 @@ fn bid_iteration(iteration: &mut Iteration, fee_tier: &FeeTier, ob: &mut OrderBo
     done
 }
 
+#[allow(dead_code)]
 fn ask_iteration(iteration: &mut Iteration, fee_tier: &FeeTier, ob: &mut OrderBookState) -> bool {
     let pc_lot_size = ob.market_state.pc_lot_size;
     let coin_lot_size = ob.market_state.coin_lot_size;
@@ -111,35 +102,31 @@ fn ask_iteration(iteration: &mut Iteration, fee_tier: &FeeTier, ob: &mut OrderBo
     let mut unfilled_qty = max_qty / coin_lot_size;
     let mut accum_fill_price = 0;
 
-    let done = loop {
-        let best_bid = match ob.bids.find_max() {
-            // min = best ask
-            Some(best_bid) => best_bid,
-            None => {
-                break true; // no more bids
-            }
-        };
+    let done = if let Some(best_bid) = ob.bids.find_max() {
         let best_bid_ref = ob.bids.get_mut(best_bid).unwrap().as_leaf_mut().unwrap();
 
         let trade_price = best_bid_ref.price();
         let bid_size = best_bid_ref.quantity();
         let trade_qty = bid_size.min(unfilled_qty);
 
-        if trade_qty == 0 {
+        if trade_qty != 0 {
+            best_bid_ref.set_quantity(best_bid_ref.quantity() - trade_qty);
+            unfilled_qty -= trade_qty;
+            accum_fill_price += trade_qty * trade_price.get();
+
+            if best_bid_ref.quantity() == 0 {
+                let best_offer_id = best_bid_ref.order_id();
+                ob.bids.remove_by_key(best_offer_id).unwrap();
+            }
+            false
+        } else {
             // fin
-            break true;
+            true
         }
-
-        best_bid_ref.set_quantity(best_bid_ref.quantity() - trade_qty);
-        unfilled_qty -= trade_qty;
-        accum_fill_price += trade_qty * trade_price.get();
-
-        if best_bid_ref.quantity() == 0 {
-            let best_offer_id = best_bid_ref.order_id();
-            ob.bids.remove_by_key(best_offer_id).unwrap();
-        }
-        break false;
+    } else {
+        true
     };
+
     // fees applied after
     let native_taker_pc_qty = accum_fill_price * pc_lot_size;
     let native_taker_fee = fee_tier.taker_fee(native_taker_pc_qty);
@@ -157,8 +144,7 @@ fn main() {
 
     // let pool_path = "../../serum/serum_pools/ByRys5tuUWDgL73G8JBAEfkdFf8JWBzPBDHsBVQ5vbQA_serum_dex.json";
     // let pool_path = "../../serum/serum_pools/8PMHyKJ5FycCopijj6eXeCkenB71CYxCKH7AibkksdG5_serum_dex.json";
-    let pool_path =
-        "../pools/serum/7dLVkUfBVfCGkFhSXDCq1ukM9usathSgS716t643iFGF_serum_dex.json";
+    let pool_path = "../pools/serum/7dLVkUfBVfCGkFhSXDCq1ukM9usathSgS716t643iFGF_serum_dex.json";
     let _pool_tipe = PoolType::SerumPoolType;
 
     let contents = std::fs::read_to_string(pool_path).unwrap();
@@ -276,7 +262,7 @@ fn main() {
     };
 
     let owner_kp_path = "../../mainnet_fork/localnet_owner.key";
-    let owner = read_keypair_file(owner_kp_path.clone()).unwrap();
+    let owner = read_keypair_file(owner_kp_path).unwrap();
     println!("{}", owner.pubkey());
 
     let open_orders = Keypair::new();
@@ -295,7 +281,7 @@ fn main() {
 
     // setup anchor things
     let provider = Client::new_with_options(cluster, Rc::new(owner), CommitmentConfig::confirmed());
-    let program = provider.program(*ARB_PROGRAM_ID);
+    let program = provider.program(*ARB_PROGRAM_ID).unwrap();
     let owner = read_keypair_file(owner_kp_path).unwrap();
 
     let init_ix = program

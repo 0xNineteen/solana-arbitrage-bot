@@ -8,5 +8,5 @@ do
     echo "------" >> log.txt
     echo $(date) >> log.txt
     echo "------" >> log.txt
-    ./target/release/main --cluster mainnet
+    ./target/release/main --cluster localnet
 done

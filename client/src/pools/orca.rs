@@ -1,8 +1,10 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
+use std::rc::Rc;
 use serde;
 use serde::{Deserialize, Serialize};
 use solana_sdk::account::Account;
+use solana_sdk::signature::Keypair;
 use crate::serialize::token::{Token, WrappedPubkey, unpack_token_account};
 use crate::serialize::pool::JSONFeeStructure; 
 use crate::pool::PoolOperations;
@@ -46,7 +48,7 @@ pub struct OrcaPool {
 
 impl PoolOperations for OrcaPool {
     fn swap_ix(&self, 
-        program: &Program,
+        program: &Program<Rc<Keypair>>,
         owner: &Pubkey,
         mint_in: &Pubkey, 
         mint_out: &Pubkey

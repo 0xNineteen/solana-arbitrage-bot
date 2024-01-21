@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::fmt::Debug;
+use std::rc::Rc;
 use std::str::FromStr;
 
 use serde;
@@ -12,6 +13,7 @@ use anchor_client::Cluster;
 use solana_sdk::account::Account;
 use solana_sdk::instruction::Instruction;
 
+use solana_sdk::signature::Keypair;
 use tmp::accounts as tmp_accounts;
 use tmp::instruction as tmp_ix;
 
@@ -54,7 +56,7 @@ pub struct AldrinPool {
 
 impl PoolOperations for AldrinPool {
     fn swap_ix(&self, 
-        program: &Program,
+        program: &Program<Rc<Keypair>>,
         owner: &Pubkey,
         _mint_in: &Pubkey, 
         mint_out: &Pubkey

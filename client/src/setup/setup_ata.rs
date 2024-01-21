@@ -28,7 +28,7 @@ use log::warn;
 
 use client::serialize::token::unpack_token_account;
 use client::utils::{derive_token_address, read_json_dir};
-use client::pool::{PoolType, PoolOperations, pool_factory};
+use client::pool::{PoolType, pool_factory};
 use client::constants::*;
 
 #[derive(Debug)]
@@ -42,7 +42,7 @@ fn main() {
 
     env_logger::init();
     let owner_kp_path = "../../../mainnet.key";     
-    let owner = read_keypair_file(owner_kp_path.clone()).unwrap();
+    let owner = read_keypair_file(owner_kp_path).unwrap();
 
     // ** setup RPC connection 
     let connection = RpcClient::new_with_commitment(

@@ -21,7 +21,7 @@ use solana_sdk::account::Account;
 
 use client::arb::*;
 use client::constants::*;
-use client::pool::{pool_factory, PoolDir, PoolOperations, PoolType};
+use client::pool::{pool_factory, PoolDir, PoolType};
 use client::serialize::token::unpack_token_account;
 use client::utils::{
     derive_token_address, read_json_dir, PoolEdge, PoolGraph, PoolIndex, PoolQuote,
@@ -60,7 +60,7 @@ fn main() {
     env_logger::init();
 
     let owner_kp_path = match cluster {
-        Cluster::Localnet => "../../mainnet_fork/localnet_owner.key",
+        Cluster::Localnet => "../mainnet-fork/localnet_owner.key",
         Cluster::Mainnet => "/Users/ggrigori/solana/wallets/my_solana_wallet/my-keypair.json",
         _ => panic!("shouldnt get here"),
     };
@@ -73,6 +73,7 @@ fn main() {
         _ => cluster.url(),
     };
     info!("using connection: {}", connection_url);
+    info!("Owner key path {}", owner_kp_path);
 
     let connection = RpcClient::new_with_commitment(connection_url, CommitmentConfig::confirmed());
     let send_tx_connection =
@@ -86,7 +87,7 @@ fn main() {
         rc_owner.clone(),
         CommitmentConfig::confirmed(),
     );
-    let program = provider.program(*ARB_PROGRAM_ID);
+    let program = provider.program(*ARB_PROGRAM_ID).unwrap();
 
     // ** define pool JSONs
     let mut pool_dirs = vec![];

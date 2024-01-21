@@ -2,7 +2,6 @@ import { Market, MARKETS, MarketProxy } from "@project-serum/serum";
 import { TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
 
 import { Connection, PublicKey } from "@solana/web3.js";
-import { log } from "console";
 const fs = require("fs");
 
 function sleep(ms: number) {

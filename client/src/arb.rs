@@ -29,11 +29,11 @@ pub struct Arbitrager {
     pub cluster: Cluster,
     // vv -- need to clone these explicitly -- vv
     pub owner: Rc<Keypair>,
-    pub program: Program,
+    pub program: Program<Rc<Keypair>>,
     pub connection: RpcClient,
 }
 
-impl Arbitrager {
+impl  Arbitrager {
     pub fn brute_force_search(
         &self,
         start_mint_idx: usize,
