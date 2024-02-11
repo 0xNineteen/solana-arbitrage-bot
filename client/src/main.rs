@@ -12,7 +12,7 @@ use std::rc::Rc;
 use std::str::FromStr;
 
 use std::borrow::Borrow;
-use std::vec;
+use std::{env, vec};
 
 use clap::Parser;
 
@@ -45,7 +45,7 @@ fn add_pool_to_graph<'a>(
         .0
         .entry(idx0)
         .or_insert_with(|| PoolEdge(HashMap::new()));
-    let quotes = edges.0.entry(idx1).or_insert_with(|| vec![]);
+    let quotes = edges.0.entry(idx1).or_default();
     quotes.push(quote.clone());
 }
 
@@ -72,8 +72,8 @@ fn main() {
         }
         _ => cluster.url(),
     };
-    info!("using connection: {}", connection_url);
-    info!("Owner key path {}", owner_kp_path);
+    println!("using connection: {}", connection_url);
+    println!("Owner key path {}", owner_kp_path);
 
     let connection = RpcClient::new_with_commitment(connection_url, CommitmentConfig::confirmed());
     let send_tx_connection =
@@ -121,9 +121,9 @@ fn main() {
     let mut mint2idx = HashMap::new();
     let mut graph_edges = vec![];
 
-    info!("extracting pool + mints...");
+    println!("extracting pool + mints...");
     for pool_dir in pool_dirs {
-        debug!("pool dir: {:#?}", pool_dir);
+        println!("pool dir: {:#?}", pool_dir);
         let pool_paths = read_json_dir(&pool_dir.dir_path);
 
         for pool_path in pool_paths {
@@ -133,7 +133,7 @@ fn main() {
             let pool_mints = pool.get_mints();
             if pool_mints.len() != 2 {
                 // only support 2 mint pools
-                warn!("skipping pool with mints != 2: {:?}", pool_path);
+                println!("skipping pool with mints != 2: {:?}", pool_path);
                 continue;
             }
 
@@ -178,8 +178,8 @@ fn main() {
     }
     let mut update_pks = update_pks.concat();
 
-    info!("added {:?} mints", token_mints.len());
-    info!("added {:?} pools", pools.len());
+    println!("added {:?} mints", token_mints.len());
+    println!("added {:?} pools", pools.len());
 
     // !
     let usdc_mint = Pubkey::from_str("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v").unwrap();
@@ -192,7 +192,7 @@ fn main() {
     // slide it in there
     update_pks.push(owner_start_addr);
 
-    info!("getting pool amounts...");
+    println!("getting pool amounts...");
     let mut update_accounts = vec![];
     for token_addr_chunk in update_pks.chunks(99) {
         let accounts = connection.get_multiple_accounts(token_addr_chunk).unwrap();
@@ -204,40 +204,37 @@ fn main() {
         .filter(|s| s.is_some())
         .collect::<Vec<Option<Account>>>();
 
-    info!("update accounts is {:?}", update_accounts.len());
+    println!("update accounts is {:?}", update_accounts.len());
     // slide it out here
     println!("accounts: {:#?}", update_accounts.clone());
     let init_token_acc = update_accounts.pop().unwrap().unwrap();
     let init_token_balance = unpack_token_account(&init_token_acc.data).amount as u128;
-    info!(
+    println!(
         "init token acc: {:?}, balance: {:#}",
         init_token_acc, init_token_balance
     );
-    info!("starting balance = {}", init_token_balance);
+    println!("starting balance = {}", init_token_balance);
 
-    info!("setting up exchange graph...");
+    println!("setting up exchange graph...");
     let mut graph = PoolGraph::new();
-    let mut pool_count = 0;
     let mut account_ptr = 0;
 
-    for pool in pools.into_iter() {
+    for (pool_count, mut pool) in pools.into_iter().enumerate() {
         // update pool
         let length = update_pks_lengths[pool_count];
-        let _account_slice = &update_accounts[account_ptr..account_ptr + length].to_vec();
+        let _account_slice = update_accounts[account_ptr..account_ptr + length].to_vec();
         account_ptr += length;
 
-        // pool.set_update_accounts(*account_slice);
+        pool.set_update_accounts(Rc::new(_account_slice), &cluster);
 
         // add pool to graph
         let idxs = &all_mint_idxs[pool_count * 2..(pool_count + 1) * 2].to_vec();
         let idx0 = PoolIndex(idxs[0]);
         let idx1 = PoolIndex(idxs[1]);
 
-        let mut pool_ptr = PoolQuote::new(Rc::new(pool));
-        add_pool_to_graph(&mut graph, idx0, idx1, &mut pool_ptr.clone());
-        add_pool_to_graph(&mut graph, idx1, idx0, &mut pool_ptr);
-
-        pool_count += 1;
+        let pool_ptr = PoolQuote::new(Rc::new(pool));
+        add_pool_to_graph(&mut graph, idx0, idx1, &pool_ptr.clone());
+        add_pool_to_graph(&mut graph, idx1, idx0, &pool_ptr);
     }
 
     let arbitrager = Arbitrager {
@@ -250,7 +247,7 @@ fn main() {
         connection: send_tx_connection,
     };
 
-    info!("searching for arbitrages...");
+    println!("searching for arbitrages...");
     let min_swap_amount = 10_u128.pow(6_u32); // scaled! -- 1 USDC
     let mut swap_start_amount = init_token_balance; // scaled!
     let mut sent_arbs = HashSet::new(); // track what arbs we did with a larger size

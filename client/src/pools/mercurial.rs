@@ -141,7 +141,7 @@ impl PoolOperations for MercurialPool {
         accounts 
     }
 
-    fn set_update_accounts(&mut self, accounts: Vec<Option<Account>>, _cluster: Cluster) { 
+    fn set_update_accounts(&mut self, accounts: Rc<Vec<Option<Account>>>, _cluster: &Cluster) { 
         let ids: Vec<String> = self
             .get_mints()
             .iter()

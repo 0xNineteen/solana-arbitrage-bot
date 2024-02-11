@@ -1,5 +1,5 @@
-import { Market, MARKETS, MarketProxy } from "@project-serum/serum";
-import { TOKEN_PROGRAM_ID, Token } from "@solana/spl-token";
+import { Market, MARKETS } from "@project-serum/serum";
+import { TOKEN_PROGRAM_ID, getMint } from "@solana/spl-token";
 
 import { Connection, PublicKey } from "@solana/web3.js";
 const fs = require("fs");
@@ -54,19 +54,7 @@ async function main() {
       {},
       marketInfo.programId
     );
-    const baseToken = new Token(
-      connection,
-      new PublicKey(market.baseMintAddress),
-      TOKEN_PROGRAM_ID,
-      null
-    );
-    const baseTokenInfo = await baseToken.getMintInfo();
-    const quoteToken = new Token(
-      connection,
-      new PublicKey(market.quoteMintAddress),
-      TOKEN_PROGRAM_ID,
-      null
-    );
+    const baseTokenInfo = await getMint(connection, new PublicKey(market.baseMintAddress), "single", TOKEN_PROGRAM_ID);
     const vaultSignerKey = await getVaultSignerAddress(
       marketInfo.address.toString(),
       market.decoded.vaultSignerNonce
@@ -74,7 +62,7 @@ async function main() {
     if (!vaultSignerKey) {
       continue;
     }
-    const quoteTokenInfo = await quoteToken.getMintInfo();
+    const quoteTokenInfo = await getMint(connection, new PublicKey(market.quoteMintAddress), "single", TOKEN_PROGRAM_ID);
 
     const pool: SerumPool = {
       ownAddress: market.address.toString(),

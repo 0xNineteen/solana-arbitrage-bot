@@ -49,7 +49,7 @@ pub struct SerumPool {
     pub taker_fee_pct: f64,
     // !!
     #[serde(skip)]
-    pub accounts: Option<Vec<Option<Account>>>,
+    pub accounts: Rc<Vec<Option<Account>>>,
     #[serde(skip)]
     pub open_orders: Option<HashMap<String, String>>,
 }
@@ -169,8 +169,8 @@ impl PoolOperations for SerumPool {
         vec![self.own_address.0, self.bids.0, self.asks.0]
     }
 
-    fn set_update_accounts(&mut self, accounts: Vec<Option<Account>>, cluster: Cluster) {
-        self.accounts = Some(accounts);
+    fn set_update_accounts(&mut self, accounts: Rc<Vec<Option<Account>>>, cluster: &Cluster) {
+        self.accounts = Rc::clone(&accounts);
         let oo_path = match cluster {
             Cluster::Localnet => "./serum_open_orders.json",
             Cluster::Mainnet => {
@@ -217,9 +217,9 @@ impl PoolOperations for SerumPool {
             amount_out: 0,
         };
 
-        let market_acc = &self.accounts.as_ref().unwrap()[0];
-        let bids_acc = &self.accounts.as_ref().unwrap()[1];
-        let asks_acc = &self.accounts.as_ref().unwrap()[2];
+        let market_acc = &self.accounts.as_ref()[0];
+        let bids_acc = &self.accounts.as_ref()[1];
+        let asks_acc = &self.accounts.as_ref()[2];
 
         // clone accounts for simulation (improve later?)
         let market_acc = &mut market_acc.clone().unwrap();
@@ -318,9 +318,9 @@ impl PoolOperations for SerumPool {
     }
 
     fn can_trade(&self, mint_in: &Pubkey, _mint_out: &Pubkey) -> bool {
-        let market_acc = &self.accounts.as_ref().unwrap()[0];
-        let bids_acc = &self.accounts.as_ref().unwrap()[1];
-        let asks_acc = &self.accounts.as_ref().unwrap()[2];
+        let market_acc = &self.accounts.as_ref()[0];
+        let bids_acc = &self.accounts.as_ref()[1];
+        let asks_acc = &self.accounts.as_ref()[2];
 
         // clone accounts for simulation (improve later?)
         let market_acc = &mut market_acc.clone().unwrap();

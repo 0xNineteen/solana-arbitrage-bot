@@ -9,6 +9,7 @@
 ### More Details (maybe outdated)
 
 - `scrape_signature.ts`: scrapes all programs + accounts in signature
+- `scrape_accounts.py`: scrapes all accounts with cli
 - `setup_validator.py`: downloads all programs + accounts which were scraped + constructs `start_localnet.sh`
 - `start_localnet.sh`: starts `solana-test-validator` with all preloaded things
 - `orca_swap.ts`: interact with mainnet orca pools from downloaded signature

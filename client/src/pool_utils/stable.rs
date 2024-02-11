@@ -195,6 +195,7 @@ impl CurveCalculator for StableCurve {
         swap_destination_amount: u128,
         _trade_direction: TradeDirection,
     ) -> Option<SwapWithoutFeesResult> {
+        println!("Call swap withou fees method");
         if source_amount == 0 {
             return Some(SwapWithoutFeesResult {
                 source_amount_swapped: 0,

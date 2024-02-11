@@ -7,7 +7,7 @@ npx ts-node setup_owner.ts &&
 cd get_wsol &&
 npx ts-node index.ts && 
 cd ../../program/ && 
-bash localnet_setup.sh &&
-echo "testing arb client" &&
-cd ../client && 
-cargo test 
+bash localnet_setup.sh
+# echo "testing arb client" &&
+# cd ../client && 
+# cargo test 

@@ -53,7 +53,7 @@ pub fn pool_factory(tipe: &PoolType, json_str: &str) -> Box<dyn PoolOperations> 
 pub trait PoolOperations: Debug {
     fn get_name(&self) -> String;
     fn get_update_accounts(&self) -> Vec<Pubkey>;
-    fn set_update_accounts(&mut self, accounts: Vec<Option<Account>>, cluster: Cluster);
+    fn set_update_accounts(&mut self, accounts: Rc<Vec<Option<Account>>>, cluster: &Cluster);
 
     fn mint_2_addr(&self, mint: &Pubkey) -> Pubkey;
     fn get_mints(&self) -> Vec<Pubkey>;

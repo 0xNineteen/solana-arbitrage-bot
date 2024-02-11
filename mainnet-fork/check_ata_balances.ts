@@ -74,7 +74,7 @@ async function main() {
   let ata_pks = await Promise.all(
     mints.map(async (m) => {
       let ata_pk = (
-        await web3.PublicKey.findProgramAddress(
+        await web3.PublicKey.findProgramAddressSync(
           [
             owner.publicKey.toBuffer(),
             token.TOKEN_PROGRAM_ID.toBuffer(),
@@ -96,12 +96,12 @@ async function main() {
         return;
       }
       let data = v.data;
-      let token_acc: token.AccountInfo = AccountLayout.decode(data);
-      let balance = new token.u64(token_acc.amount);
+      let token_acc  = AccountLayout.decode(data);
+      let balance = token_acc.amount;
       let mint = new web3.PublicKey(token_acc.mint);
 
       // EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v = USDC
-      if (balance > new token.u64(0)) {
+      if (balance > 0) {
         console.log("mint:", mint.toString(), "balance:", balance.toString());
         count += 1;
       } else {

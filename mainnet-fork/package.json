@@ -9,18 +9,23 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@aldrin_exchange/sdk": "^0.4.51",
+    "@openbook-dex/openbook-v2": "^0.1.7",
     "@orca-so/sdk": "^1.2.26",
     "@project-serum/borsh": "^0.2.5",
     "@project-serum/serum": "^0.13.65",
-    "@solana/buffer-layout-utils": "^0.2.0",
-    "@solana/spl-token": "^0.1.5",
-    "@solana/spl-token-swap": "^0.1.2",
-    "@solana/web3.js": "^1.24.1",
+    "@solana/buffer-layout": "^4.0.1",
+    "@solana/spl-token": "^0.3.11",
+    "@solana/spl-token-swap": "^0.4.0",
+    "@solana/web3.js": "^1.90.0",
+    "big.js": "^6.2.1",
     "decimal.js": "^10.3.1"
   },
+  "resolutions": {
+    "@solana/web3.js": "^1.89.1",
+    "@solana/spl-token": "^0.3.11"
+  },
   "devDependencies": {
-    "@aldrin_exchange/sdk": "^0.4.51",
-    "@openbook-dex/openbook-v2": "^0.1.7",
     "@types/bn.js": "^4.11.6",
     "@types/decimal.js": "^7.4.0",
     "@types/node": "^12.0.0",

@@ -93,7 +93,7 @@ fn test_pool_quote(
     // get token reserve addrs
     let update_accounts = pool.get_update_accounts();
     let accounts = connection.get_multiple_accounts(&update_accounts).unwrap();
-    pool.set_update_accounts(accounts, Cluster::Localnet);
+    pool.set_update_accounts(Rc::new(accounts), &Cluster::Localnet);
 
     // get a quote
     let pool_mints = pool.get_mints();
@@ -120,15 +120,18 @@ fn test_pool_quote(
 
     // println!("---");
     // println!("{:#?}", pool);
-    println!("MINT: {} \n    ATA: {}", mint_in, src_ata);
+    println!("MINT: {} \nATA: {}", mint_in, src_ata);
     // println!("MINT: {} \n    ATA: {}", mint_out, dst_ata);
-    println!("{}", amount_in);
+    println!("Amount In: {}", amount_in);
 
     let mut loop_count = 0;
     let mut quote_out_amount;
     loop {
         quote_out_amount = pool.get_quote_with_amounts_scaled(amount_in, mint_in, mint_out);
-        println!("quote: {}", quote_out_amount);
+        println!(
+            "Calculated quote with amount scaled: {}, amount in: {}",
+            quote_out_amount, amount_in
+        );
 
         if quote_out_amount == 0 {
             amount_in += 100 * 10_u128.pow(src_scale as u32);
@@ -154,9 +157,10 @@ fn test_pool_quote(
     let mut ixs = vec![];
 
     println!(
-        "src balance: {} amount in {}",
+        "src balance: {} amount in {}, src_scale: {}",
         src_balance / 10_u128.pow(src_scale as u32),
-        amount_in / 10_u128.pow(src_scale as u32)
+        amount_in,
+        src_scale
     );
     if amount_in > src_balance {
         if mint_in.to_string() != "So11111111111111111111111111111111111111112" {
@@ -227,6 +231,7 @@ fn test_pool_quote(
                     println!("pool path: {pool_path}");
                     println!("quote: {amount_in} -> {quote_out_amount}");
                     println!("logs: {:#?}", s.value.logs);
+                    println!("Err: {:#?}", s.value.err);
                     panic!("ahhh");
                 }
                 None => {

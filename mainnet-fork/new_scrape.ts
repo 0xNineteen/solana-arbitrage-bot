@@ -8,6 +8,10 @@ const fs = require("fs");
 
 export const chunk_size = 5;
 
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export async function read_dir_names(dir_name: string) {
   const dir = fs.opendirSync(dir_name);
   let dirent;
@@ -39,7 +43,7 @@ import {
 
 // l m f a o
 //* AccountLayout.encode from "@solana/spl-token" doesn't work : https://github.com/solana-labs/solana-program-library/blob/27a58282d354ab3596e48a9be7957eec511b8b8e/stake-pool/js/src/layouts.ts#L14
-export const AccountLayout = struct<token.AccountInfo>([
+export const AccountLayout = struct([
   publicKey("mint"),
   publicKey("owner"),
   u64("amount"),
@@ -55,7 +59,8 @@ export const AccountLayout = struct<token.AccountInfo>([
 
 async function main() {
   let connection = new web3.Connection(
-    "https://methodical-soft-card.solana-mainnet.quiknode.pro/91b29303c21bce424386b919f222da4f4358374a/"
+    "https://methodical-soft-card.solana-mainnet.quiknode.pro/91b29303c21bce424386b919f222da4f4358374a/",
+    "confirmed"
   );
   let programs = [];
   let accounts = [];
@@ -242,77 +247,12 @@ async function main() {
     () => {}
   );
 
-  // equivalent to
-  // command = "solana account -u m \
-  // --output json-compact \
-  // --output-file accounts/{}.json {}"
-  // BATCHED >:)
-
-  console.log("scrapping accounts...");
-  let n = 1;
-  for (let acc_chunk of chunk(accounts, chunk_size)) {
-    console.log(chunk_size * n, "/", accounts.length);
-    n += 1;
-    let infos = await connection.getMultipleAccountsInfo(
-      acc_chunk.map((s) => new web3.PublicKey(s))
-    );
-
-    infos = infos.filter((v) => !!v);
-    console.log("scrapping accounts...", infos.length, "/", acc_chunk.length);
-
-    for (let i = 0; i < infos.length; i++) {
-      let pk = acc_chunk[i];
-      var info = infos[i];
-
-      let notype_info = JSON.parse(JSON.stringify(info, null, "\t"));
-      notype_info.data = [info.data.toString("base64"), "base64"];
-
-      let local_validator_acc = {
-        account: notype_info,
-        pubkey: pk,
-      };
-      let path = `accounts/${pk}.json`;
-      fs.writeFile(path, JSON.stringify(local_validator_acc), "utf8", () => {});
-    }
-  }
-
   fs.writeFile(
     `programs.json`,
     JSON.stringify(programs, null, "\t"),
     "utf8",
     () => {}
   );
-
-  console.log("scrapping mints...");
-  for (let acc_chunk of chunk(mints, chunk_size)) {
-    let infos = await connection.getMultipleAccountsInfo(
-      acc_chunk.map((s) => new web3.PublicKey(s))
-    );
-
-    infos = infos.filter((v) => !!v);
-    console.log("Minting...", infos.length, "/", acc_chunk.length);
-
-    for (let i = 0; i < infos.length; i++) {
-      let pk = acc_chunk[i];
-      var info = infos[i];
-      // let data = info.data;
-
-      let mint = token.MintLayout.decode(info.data);
-      mint.mintAuthority = owner.publicKey.toBuffer(); // allow me to mint more :)
-      mint.mintAuthorityOption = 1; // :)
-      let data = Buffer.alloc(token.MintLayout.span);
-      token.MintLayout.encode(mint, data);
-
-      let notype_info = JSON.parse(JSON.stringify(info, null, "\t"));
-      notype_info.data = [data.toString("base64"), "base64"]; // !!
-      let local_validator_acc = {
-        account: notype_info,
-        pubkey: pk,
-      };
-      let path = `accounts/${pk}.json`;
-      fs.writeFile(path, JSON.stringify(local_validator_acc), "utf8", () => {});
-    }
-  }
 }
 
 main();
