@@ -4,6 +4,7 @@ const fs = require("fs");
 
 interface PoolParams {
   address: string;
+  amp: number;
   nonce: number;
   authority: string;
   poolTokenMint: string;
@@ -89,9 +90,12 @@ async function main() {
         },
       },
     };
+    if (poolParams.curveType === 2) {
+      poolParams.amp = poolParamsUntyped.amp;
+    }
 
     fs.writeFile(
-      "../pools/orca/params_" + poolKey + ".json",
+      "../../pools/orca/params_" + poolKey + ".json",
       JSON.stringify(poolParams),
       "utf8",
       () => {}

@@ -1,58 +1,48 @@
 use anchor_lang::prelude::*;
-use solana_program::instruction::{AccountMeta, Instruction};
-use solana_program;
-use anchor_spl::{
-    token::{TokenAccount}
-};
-use anchor_lang::{Accounts};
+use anchor_lang::Accounts;
+use anchor_spl::token::TokenAccount;
 use sha2::{Digest, Sha256};
+use solana_program;
+use solana_program::instruction::{AccountMeta, Instruction};
 
 use crate::state::SwapState;
 
 pub fn _aldrin_swap_v1<'info>(
-    ctx: &Context<'_, '_, '_, 'info, AldrinSwapV1<'info>>, 
+    ctx: &Context<'_, '_, '_, 'info, AldrinSwapV1<'info>>,
     amount_in: u64,
     is_inverted: bool,
 ) -> Result<()> {
-
-    // anchor method discriminator 
+    // anchor method discriminator
     let key = "global:swap".to_string();
-    let mut hasher = Sha256::new(); 
+    let mut hasher = Sha256::new();
     hasher.update(key);
     let result = hasher.finalize();
     let fcn_name = &result.as_slice()[..8];
 
     let amount_in_bytes = &amount_in.try_to_vec().unwrap()[..];
-    let amount_out_bytes = &(0 as u64).try_to_vec().unwrap()[..];
-    let bid_ask_flag = if is_inverted { 1 } else { 0 }; // 0 = bid, 1 = ask 
+    let amount_out_bytes = &0_u64.try_to_vec().unwrap()[..];
+    let bid_ask_flag = if is_inverted { 1 } else { 0 }; // 0 = bid, 1 = ask
     let bid_ask = &[bid_ask_flag];
-    let data = [
-        fcn_name, 
-        amount_in_bytes, 
-        amount_out_bytes, 
-        bid_ask, 
-    ].concat();
+    let data = [fcn_name, amount_in_bytes, amount_out_bytes, bid_ask].concat();
 
     let ix_accounts = vec![
         AccountMeta::new_readonly(*ctx.accounts.pool_public_key.key, false),
         AccountMeta::new_readonly(*ctx.accounts.pool_signer.key, false),
-        
         AccountMeta::new(*ctx.accounts.pool_mint.key, false),
-        AccountMeta::new(*ctx.accounts.base_token_vault.key, false), 
-        AccountMeta::new(*ctx.accounts.quote_token_vault.key, false), 
+        AccountMeta::new(*ctx.accounts.base_token_vault.key, false),
+        AccountMeta::new(*ctx.accounts.quote_token_vault.key, false),
         AccountMeta::new(*ctx.accounts.fee_pool_token_account.key, false),
-
         AccountMeta::new_readonly(*ctx.accounts.user_transfer_authority.key, true),
-        AccountMeta::new(ctx.accounts.user_base_ata.key(), false), 
-        AccountMeta::new(ctx.accounts.user_quote_ata.key(), false), 
+        AccountMeta::new(ctx.accounts.user_base_ata.key(), false),
+        AccountMeta::new(ctx.accounts.user_quote_ata.key(), false),
         AccountMeta::new_readonly(*ctx.accounts.token_program.key, false),
     ];
 
-    // gotta work with the bytes to get this right 
+    // gotta work with the bytes to get this right
     let instruction = Instruction {
         program_id: *ctx.accounts.aldrin_v1_program.key,
         accounts: ix_accounts,
-        data: data,
+        data,
     };
 
     let accounts = vec![
@@ -66,62 +56,51 @@ pub fn _aldrin_swap_v1<'info>(
         ctx.accounts.user_base_ata.to_account_info(),
         ctx.accounts.user_quote_ata.to_account_info(),
         ctx.accounts.token_program.to_account_info(),
-        ctx.accounts.aldrin_v1_program.to_account_info()
+        ctx.accounts.aldrin_v1_program.to_account_info(),
     ];
 
-    solana_program::program::invoke(
-        &instruction, 
-        &accounts, 
-    )?;
+    solana_program::program::invoke(&instruction, &accounts)?;
 
     Ok(())
 }
 
 pub fn _aldrin_swap_v2<'info>(
-    ctx: &Context<'_, '_, '_, 'info, AldrinSwapV2<'info>>, 
+    ctx: &Context<'_, '_, '_, 'info, AldrinSwapV2<'info>>,
     amount_in: u64,
     is_inverted: bool,
 ) -> Result<()> {
-
-    // anchor method discriminator 
+    // anchor method discriminator
     let key = "global:swap".to_string();
-    let mut hasher = Sha256::new(); 
+    let mut hasher = Sha256::new();
     hasher.update(key);
     let result = hasher.finalize();
     let fcn_name = &result.as_slice()[..8];
 
     let amount_in_bytes = &amount_in.try_to_vec().unwrap()[..];
-    let amount_out_bytes = &(0 as u64).try_to_vec().unwrap()[..];
-    let bid_ask_flag = if is_inverted { 1 } else { 0 }; // 0 = bid, 1 = ask 
+    let amount_out_bytes = &0_u64.try_to_vec().unwrap()[..];
+    let bid_ask_flag = if is_inverted { 1 } else { 0 }; // 0 = bid, 1 = ask
     let bid_ask = &[bid_ask_flag];
-    let data = [
-        fcn_name, 
-        amount_in_bytes, 
-        amount_out_bytes, 
-        bid_ask, 
-    ].concat();
+    let data = [fcn_name, amount_in_bytes, amount_out_bytes, bid_ask].concat();
 
     let ix_accounts = vec![
         AccountMeta::new_readonly(*ctx.accounts.pool_public_key.key, false),
         AccountMeta::new_readonly(*ctx.accounts.pool_signer.key, false),
-        
         AccountMeta::new(*ctx.accounts.pool_mint.key, false),
-        AccountMeta::new(*ctx.accounts.base_token_vault.key, false), 
-        AccountMeta::new(*ctx.accounts.quote_token_vault.key, false), 
+        AccountMeta::new(*ctx.accounts.base_token_vault.key, false),
+        AccountMeta::new(*ctx.accounts.quote_token_vault.key, false),
         AccountMeta::new(*ctx.accounts.fee_pool_token_account.key, false),
-
         AccountMeta::new_readonly(*ctx.accounts.user_transfer_authority.key, true),
-        AccountMeta::new(ctx.accounts.user_base_ata.key(), false), 
-        AccountMeta::new(ctx.accounts.user_quote_ata.key(), false), 
+        AccountMeta::new(ctx.accounts.user_base_ata.key(), false),
+        AccountMeta::new(ctx.accounts.user_quote_ata.key(), false),
         AccountMeta::new_readonly(*ctx.accounts.curve.key, false),
         AccountMeta::new_readonly(*ctx.accounts.token_program.key, false),
     ];
 
-    // gotta work with the bytes to get this right 
+    // gotta work with the bytes to get this right
     let instruction = Instruction {
         program_id: *ctx.accounts.aldrin_v2_program.key,
         accounts: ix_accounts,
-        data: data,
+        data,
     };
 
     let accounts = vec![
@@ -136,13 +115,10 @@ pub fn _aldrin_swap_v2<'info>(
         ctx.accounts.user_quote_ata.to_account_info(),
         ctx.accounts.curve.to_account_info(),
         ctx.accounts.token_program.to_account_info(),
-        ctx.accounts.aldrin_v2_program.to_account_info()
+        ctx.accounts.aldrin_v2_program.to_account_info(),
     ];
 
-    solana_program::program::invoke(
-        &instruction, 
-        &accounts, 
-    )?;
+    solana_program::program::invoke(&instruction, &accounts)?;
 
     Ok(())
 }
@@ -165,7 +141,7 @@ pub struct AldrinSwapV1<'info> {
     #[account(mut)]
     /// CHECK: bypass
     pub fee_pool_token_account: AccountInfo<'info>,
-    pub user_transfer_authority : Signer<'info>,
+    pub user_transfer_authority: Signer<'info>,
     #[account(mut)]
     pub user_base_ata: Account<'info, TokenAccount>,
     #[account(mut)]
@@ -174,7 +150,7 @@ pub struct AldrinSwapV1<'info> {
     pub aldrin_v1_program: AccountInfo<'info>,
     /// CHECK: bypass
     pub token_program: AccountInfo<'info>,
-    #[account(mut, seeds=[b"swap_state"], bump)] 
+    #[account(mut, seeds=[b"swap_state"], bump)]
     pub swap_state: Account<'info, SwapState>,
 }
 
@@ -196,7 +172,7 @@ pub struct AldrinSwapV2<'info> {
     #[account(mut)]
     /// CHECK: bypass
     pub fee_pool_token_account: AccountInfo<'info>,
-    pub user_transfer_authority : Signer<'info>,
+    pub user_transfer_authority: Signer<'info>,
     #[account(mut)]
     pub user_base_ata: Account<'info, TokenAccount>,
     #[account(mut)]

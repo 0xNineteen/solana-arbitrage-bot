@@ -5,6 +5,7 @@ use anchor_client::solana_sdk::signature::read_keypair_file;
 use anchor_client::solana_sdk::signature::{Keypair, Signer};
 use anchor_client::{Client, Cluster, Program};
 
+use log::debug;
 use solana_sdk::transaction::Transaction;
 use spl_token::instruction::mint_to;
 
@@ -61,7 +62,7 @@ fn test_all_pool_quotes(pool_dir: String, pool_tipe: PoolType) {
     let owner_kp_path = "../mainnet-fork/localnet_owner.key";
     // setup anchor things
     let owner = read_keypair_file(owner_kp_path).unwrap();
-    println!("owner: {}", owner.pubkey());
+    debug!("owner: {}", owner.pubkey());
 
     let provider = Client::new_with_options(cluster, Rc::new(owner), CommitmentConfig::confirmed());
     let program = provider.program(*ARB_PROGRAM_ID).unwrap();
@@ -70,17 +71,17 @@ fn test_all_pool_quotes(pool_dir: String, pool_tipe: PoolType) {
     let pool_paths = read_json_dir(&pool_dir);
     let mut err_count = 0;
     let n_pools = pool_paths.len();
-    println!("found {} pools...", n_pools);
+    debug!("found {} pools...", n_pools);
 
     for pool_path in pool_paths {
         let contents = std::fs::read_to_string(&pool_path).unwrap();
         let mut pool = pool_factory(&pool_tipe, &contents);
 
-        println!("{}", pool_path);
+        debug!("{}", pool_path);
         let err_flag = test_pool_quote(&mut pool, &pool_path, &connection, &program, &owner);
         err_count += err_flag;
     }
-    println!("POOL ERRORS: {} / {}", err_count, n_pools);
+    debug!("POOL ERRORS: {} / {}", err_count, n_pools);
 }
 
 fn test_pool_quote(
@@ -105,8 +106,8 @@ fn test_pool_quote(
     let _dst_ata = derive_token_address(&owner.pubkey(), mint_out);
 
     if !pool.can_trade(mint_in, mint_out) {
-        println!("pool path: {}", pool_path);
-        println!("pool cant trade...");
+        debug!("pool path: {}", pool_path);
+        debug!("pool cant trade...");
         return 1;
     }
 
@@ -118,17 +119,17 @@ fn test_pool_quote(
         amount_in = 10_u128.pow(src_scale as u32);
     }
 
-    // println!("---");
-    // println!("{:#?}", pool);
-    println!("MINT: {} \nATA: {}", mint_in, src_ata);
-    // println!("MINT: {} \n    ATA: {}", mint_out, dst_ata);
-    println!("Amount In: {}", amount_in);
+    // debug!("---");
+    // debug!("{:#?}", pool);
+    debug!("MINT: {} \nATA: {}", mint_in, src_ata);
+    // debug!("MINT: {} \n    ATA: {}", mint_out, dst_ata);
+    debug!("Amount In: {}", amount_in);
 
     let mut loop_count = 0;
     let mut quote_out_amount;
     loop {
         quote_out_amount = pool.get_quote_with_amounts_scaled(amount_in, mint_in, mint_out);
-        println!(
+        debug!(
             "Calculated quote with amount scaled: {}, amount in: {}",
             quote_out_amount, amount_in
         );
@@ -136,8 +137,8 @@ fn test_pool_quote(
         if quote_out_amount == 0 {
             amount_in += 100 * 10_u128.pow(src_scale as u32);
         } else if loop_count > 100_000 {
-            println!("pool path: {}", pool_path);
-            println!("loop count error!");
+            debug!("pool path: {}", pool_path);
+            debug!("loop count error!");
             return 1; // error
         } else {
             break;
@@ -156,7 +157,7 @@ fn test_pool_quote(
 
     let mut ixs = vec![];
 
-    println!(
+    debug!(
         "src balance: {} amount in {}, src_scale: {}",
         src_balance / 10_u128.pow(src_scale as u32),
         amount_in,
@@ -227,11 +228,11 @@ fn test_pool_quote(
         Ok(s) => {
             match s.value.err {
                 Some(_) => {
-                    println!("---FAILED---");
-                    println!("pool path: {pool_path}");
-                    println!("quote: {amount_in} -> {quote_out_amount}");
-                    println!("logs: {:#?}", s.value.logs);
-                    println!("Err: {:#?}", s.value.err);
+                    debug!("---FAILED---");
+                    debug!("pool path: {pool_path}");
+                    debug!("quote: {amount_in} -> {quote_out_amount}");
+                    debug!("logs: {:#?}", s.value.logs);
+                    debug!("Err: {:#?}", s.value.err);
                     panic!("ahhh");
                 }
                 None => {
@@ -244,7 +245,7 @@ fn test_pool_quote(
                             actual_amount_out = amount_out;
                         }
                     }
-                    // println!("{:#?}", s.value.logs);
+                    // debug!("{:#?}", s.value.logs);
                     assert!(actual_amount_out > 0);
 
                     // delta 1 u128 (rounding?)
@@ -266,9 +267,9 @@ fn test_pool_quote(
             }
         }
         Err(_) => {
-            println!("---FAILED---");
-            println!("pool path: {}", pool_path);
-            println!("quote: {} -> {}", amount_in, quote_out_amount);
+            debug!("---FAILED---");
+            debug!("pool path: {}", pool_path);
+            debug!("quote: {} -> {}", amount_in, quote_out_amount);
             panic!("ahhh");
         }
     }

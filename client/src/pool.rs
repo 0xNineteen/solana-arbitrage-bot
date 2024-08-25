@@ -1,5 +1,6 @@
 use anchor_client::solana_sdk::pubkey::Pubkey;
 use anchor_client::Program;
+use log::debug;
 use solana_sdk::account::Account;
 use solana_sdk::instruction::Instruction;
 use solana_sdk::signature::Keypair;
@@ -29,6 +30,10 @@ pub fn pool_factory(tipe: &PoolType, json_str: &str) -> Box<dyn PoolOperations> 
     match tipe {
         PoolType::OrcaPoolType => {
             let pool: OrcaPool = serde_json::from_str(json_str).unwrap();
+            debug!(
+                "pool: {:?}, curve_type: {}",
+                pool.token_ids, pool.curve_type
+            );
             Box::new(pool)
         }
         PoolType::MercurialPoolType => {

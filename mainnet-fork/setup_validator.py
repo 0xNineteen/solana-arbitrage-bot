@@ -1,21 +1,23 @@
-import json 
-import os 
+"""
+Set up start_localnet.sh script.
+"""
+import json
+import os
 
-local_validator_command = "solana-test-validator -r "
+LOCAL_VALIDATOR_COMMAND = "solana-test-validator -r "
 
-local_validator_command += '--account-dir accounts/'
+LOCAL_VALIDATOR_COMMAND += "--account-dir accounts/"
 
-with open("programs.json", 'r') as f:
-    programs = json.load(f) 
+with open(file="programs.json", mode="r", encoding="utf-8") as f:
+    programs = json.load(f)
 
 for prog in programs:
-    command = "solana program dump -u m \
-        {} \
-        programs/{}.so" \
-        .format(prog, prog)
+    command = f"solana program dump -u m \
+        {prog} \
+        programs/{prog}.so"
     os.system(command)
-    local_validator_command += " --bpf-program {} programs/{}.so ".format(prog, prog)
+    LOCAL_VALIDATOR_COMMAND += f" --bpf-program {prog} programs/{prog}.so "
 
-with open('start_localnet.sh', 'w') as f:
+with open(file="start_localnet.sh", mode="w", encoding="utf-8") as f:
     f.write("#!/bin/bash\n")
-    f.write(local_validator_command)
+    f.write(LOCAL_VALIDATOR_COMMAND)

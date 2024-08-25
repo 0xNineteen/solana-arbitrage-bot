@@ -90,12 +90,6 @@ impl PoolOperations for OrcaPool {
         mint_in: &Pubkey,
         mint_out: &Pubkey,
     ) -> u128 {
-        println!(
-            "getting quote with amounts scaled: {:?} {:?} {:?}",
-            scaled_amount_in, mint_in, mint_out
-        );
-        println!("pool amounts: {:?}", self.pool_amounts);
-
         let pool_src_amount = self.pool_amounts.get(&mint_in.to_string()).unwrap();
         let pool_dst_amount = self.pool_amounts.get(&mint_out.to_string()).unwrap();
 

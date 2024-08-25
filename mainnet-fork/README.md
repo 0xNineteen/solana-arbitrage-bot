@@ -2,12 +2,19 @@
 
 ## Sets up local validator node with all the needed pools and accounts
 
-- `bash get_pools.sh` to update the pools (it's optional if you want to update the pools data)
-- `bash init_new_scrape.sh`: start local val with all scrapped accounts
-- `bash setup.sh`: setup + fund all ATAs of owner + deploy and init anchor ARB program (run in a separate terminal)
+
+### HOW TO ACTUALLY START MAINNET (BECAUSE YOU FORGET IT EVERY TIME)
+
+1. `bash init_new_scrape.sh`: start local val with all scrapped accounts
+2. `bash start_localnet.sh` - start local without scrapping accounts
+3. `bash setup.sh`: setup + fund all ATAs of owner + deploy and init anchor ARB program (run in a separate terminal)
+
+
+# DEVELOPER INFO, don't run unless you have a backup.
 
 ### More Details (maybe outdated)
 
+- `bash get_pools.sh` to update the pools (it's optional if you want to update the pools data)
 - `scrape_signature.ts`: scrapes all programs + accounts in signature
 - `scrape_accounts.py`: scrapes all accounts with cli
 - `setup_validator.py`: downloads all programs + accounts which were scraped + constructs `start_localnet.sh`

@@ -1,10 +1,8 @@
 use anchor_lang::prelude::*;
 use solana_program::instruction::{AccountMeta, Instruction};
 use solana_program;
-use anchor_spl::{
-    token::{TokenAccount}
-};
-use anchor_lang::{Accounts};
+use anchor_spl::token::TokenAccount;
+use anchor_lang::Accounts;
 use crate::ix_data::SwapData;
 use crate::state::SwapState;
 
@@ -15,7 +13,7 @@ pub fn _mercurial_swap<'info>(
     // get initial balances
     let data = SwapData {
         instruction: 4, // swap instruction 
-        amount_in: amount_in,
+        amount_in,
         minimum_amount_out: 0, // no saftey lmfao 
     };
 

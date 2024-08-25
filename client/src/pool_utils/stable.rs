@@ -1,42 +1,38 @@
 //! The curve.fi invariant calculator.
 use {
     crate::{
+        error::SwapError,
         pool_utils::calculator::{
             CurveCalculator, DynPack, RoundDirection, SwapWithoutFeesResult, TradeDirection,
             TradingTokenResult,
         },
-        error::SwapError,
-    },
-    arrayref::{array_mut_ref, array_ref},
-    solana_program::{
+    }, arrayref::{array_mut_ref, array_ref}, log::debug, solana_program::{
         program_error::ProgramError,
         program_pack::{IsInitialized, Pack, Sealed},
-    },
-    spl_math::{checked_ceil_div::CheckedCeilDiv, precise_number::PreciseNumber, uint::U256},
-    std::convert::TryFrom,
+    }, spl_math::{checked_ceil_div::CheckedCeilDiv, precise_number::PreciseNumber, uint::U256}, std::convert::TryFrom
 };
 
 const N_COINS: u8 = 2;
 const N_COINS_SQUARED: u8 = 4;
 const ITERATIONS: u8 = 32;
 
-// CUSTOM STABLE COMPUTATION WITH PERCISION_MULTIPLIERS 
+// CUSTOM STABLE COMPUTATION WITH PERCISION_MULTIPLIERS
 // used for mercurial pools + saber pools
-// ported from jupiters sdk 
+// ported from jupiters sdk
 pub struct Stable {
-    pub amp: u64, 
-    pub fee_numerator: u128, 
+    pub amp: u64,
+    pub fee_numerator: u128,
     pub fee_denominator: u128,
 }
 
 impl Stable {
     pub fn get_quote(
-        &self, 
-        pool_amounts: [u128; 2],    // [0] = src_amount, [1] = dst_amount
-        percision_multipliers: [u64; 2], 
-        scaled_amount_in: u128, 
-     ) -> u128 {
-        // stableswap with percision multipliers 
+        &self,
+        pool_amounts: [u128; 2], // [0] = src_amount, [1] = dst_amount
+        percision_multipliers: [u64; 2],
+        scaled_amount_in: u128,
+    ) -> u128 {
+        // stableswap with percision multipliers
         let xp: Vec<u128> = vec![
             pool_amounts[0] * percision_multipliers[0] as u128,
             pool_amounts[1] * percision_multipliers[1] as u128,
@@ -52,9 +48,10 @@ impl Stable {
 
         // reduce fees at the end
         let fees = out_amount
-            .checked_mul(self.fee_numerator).unwrap()
-            .checked_div(self.fee_denominator).unwrap();
-        
+            .checked_mul(self.fee_numerator)
+            .unwrap()
+            .checked_div(self.fee_denominator)
+            .unwrap();
 
         out_amount - fees
     }
@@ -111,7 +108,8 @@ fn calculate_step(initial_d: &U256, leverage: u64, sum_x: u128, d_product: &U256
 
     let r_val = leverage_sub.checked_add(n_coins_sum)?;
 
-    l_val.checked_div(r_val)
+    let res = l_val.checked_div(r_val);
+    res
 }
 
 /// Compute stable swap invariant (D)
@@ -142,11 +140,17 @@ pub fn compute_d(leverage: u64, amount_a: u128, amount_b: u128) -> Option<u128> 
             //d = (leverage * sum_x + d_p * n_coins) * d / ((leverage - 1) * d + (n_coins + 1) * d_p);
             d = calculate_step(&d, leverage, sum_x, &d_product)?;
             // Equality with the precision of 1
-            if d == d_previous {
+            if d.abs_diff(d_previous) <= 1.into() {
                 break;
             }
         }
-        u128::try_from(d).ok()
+        match u128::try_from(d) {
+            Ok(v) => Some(v),
+            Err(err) => {
+                debug!("Error converting u128 from U256: d: {},  {}", d, err);
+                None
+            }
+        }
     }
 }
 
@@ -166,24 +170,39 @@ pub fn compute_new_destination_amount(
 
     // sum' = prod' = x
     // c =  D ** (n + 1) / (n ** (2 * n) * prod' * A)
-    let c = checked_u8_power(&d_val, N_COINS.checked_add(1)?)?
+    let n_coins = N_COINS.checked_add(1)?;
+    let c = checked_u8_power(&d_val, n_coins)?
         .checked_div(checked_u8_mul(&new_source_amount, N_COINS_SQUARED)?.checked_mul(leverage)?)?;
 
-    // b = sum' - (A*n**n - 1) * D / (A * n**n)
+    // b = sum' - (A*n**n - 1) * D / (A * n**n) = sum' + D/(A*n**n) - D
     let b = new_source_amount.checked_add(d_val.checked_div(leverage)?)?;
 
     // Solve for y by approximating: y**2 + b*y = c
-    let mut y = d_val;
+    // Using Newton's method
+    // y = (y**2 + c)/(2*y + b)
+    let mut y: U256 = d_val;
     for _ in 0..ITERATIONS {
-        let (y_new, _) = (checked_u8_power(&y, 2)?.checked_add(c)?)
-            .checked_ceil_div(checked_u8_mul(&y, 2)?.checked_add(b)?.checked_sub(d_val)?)?;
-        if y_new == y {
-            break;
+        let numerator = checked_u8_power(&y, 2)?.checked_add(c)?;
+        let denominator = checked_u8_mul(&y, 2)?.checked_add(b)?.checked_sub(d_val)?;
+
+        if let Some((y_new, _)) = numerator.checked_ceil_div(denominator) {
+            if y_new.abs_diff(y) <= 1.into() {
+                break;
+            } else {
+                y = y_new;
+            }
         } else {
-            y = y_new;
+            y = 0.into();
+            break;
         }
     }
-    u128::try_from(y).ok()
+    match u128::try_from(y) {
+        Ok(v) => Some(v),
+        Err(err) => {
+            debug!("Error converting u128 from U256: y: {},  {}", y, err);
+            None
+        }
+    }
 }
 
 impl CurveCalculator for StableCurve {
@@ -195,7 +214,6 @@ impl CurveCalculator for StableCurve {
         swap_destination_amount: u128,
         _trade_direction: TradeDirection,
     ) -> Option<SwapWithoutFeesResult> {
-        println!("Call swap withou fees method");
         if source_amount == 0 {
             return Some(SwapWithoutFeesResult {
                 source_amount_swapped: 0,
@@ -404,3 +422,26 @@ impl DynPack for StableCurve {
     }
 }
 
+#[cfg(test)]
+mod test {
+    use super::compute_new_destination_amount;
+
+    #[test]
+    pub fn test_compute_new_destination_amount() {
+        let leverage = 100;
+        let x = 29620354205;
+        let d = 18624644;
+        let res = compute_new_destination_amount(leverage, x, d);
+        assert!(res.is_some())
+    }
+
+    // leverage: 60, x: 56006462578, d: 286103437532
+    #[test]
+    pub fn test_compute_new_destination_amount2() {
+        let leverage = 60;
+        let x = 56006462578;
+        let d = 286103437532;
+        let res = compute_new_destination_amount(leverage, x, d);
+        assert!(res.is_some())
+    }
+}

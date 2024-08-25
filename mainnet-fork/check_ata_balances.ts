@@ -59,17 +59,18 @@ function chunk(array, chunkSize) {
 }
 
 async function main() {
-  //  my ATAs
   let connection = new web3.Connection("http://127.0.0.1:8899");
 
+  //  my ATAs
   let rawdata = fs.readFileSync(`./localnet_owner.key`, "utf8");
+  // let rawdata = fs.readFileSync(`../program/local_key/id.json`, "utf8");
   let owner_secret = new Uint8Array(JSON.parse(rawdata));
   let owner = web3.Keypair.fromSecretKey(owner_secret);
   let my_pubkey = owner.publicKey;
 
   let mints = JSON.parse(await fs.readFileSync("saved_mints.json"));
   mints = mints.map((v) => new web3.PublicKey(v));
-  console.log("NUmber of saved mints", mints.length);
+  console.log("NUmber of saved mints", mints.length, "for address", my_pubkey.toString());
 
   let ata_pks = await Promise.all(
     mints.map(async (m) => {
@@ -89,14 +90,17 @@ async function main() {
 
   let count = 0;
 
+  console.log("Checking balances for", ata_pks.length, "tokens");
+
   for (let pk_chunk of chunk(ata_pks, 99)) {
     let acc_data = await connection.getMultipleAccountsInfo(pk_chunk);
     acc_data.forEach((v) => {
       if (v == null) {
+        console.log(`null account for ata ${v}`);
         return;
       }
       let data = v.data;
-      let token_acc  = AccountLayout.decode(data);
+      let token_acc = AccountLayout.decode(data);
       let balance = token_acc.amount;
       let mint = new web3.PublicKey(token_acc.mint);
 

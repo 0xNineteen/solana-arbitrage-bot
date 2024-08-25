@@ -8,5 +8,6 @@ do
     echo "------" >> log.txt
     echo $(date) >> log.txt
     echo "------" >> log.txt
-    ./target/release/main --cluster localnet
+    RUST_LOG=client::arb=info ./target/release/main --cluster localnet
+
 done

@@ -15,7 +15,7 @@ use std::rc::Rc;
 
 use std::vec;
 
-use log::info;
+use log::{debug, info};
 
 use tmp::accounts as tmp_accounts;
 use tmp::instruction as tmp_ix;
@@ -194,7 +194,7 @@ impl  Arbitrager {
 
         if self.cluster == Cluster::Localnet {
             let res = self.connection.simulate_transaction(&tx).unwrap();
-            println!("{:#?}", res);
+            info!("{:#?}", res);
         } else if self.cluster == Cluster::Mainnet {
             let signature = self
                 .connection
@@ -206,7 +206,7 @@ impl  Arbitrager {
                     },
                 )
                 .unwrap();
-            println!("signature: {:?}", signature);
+            debug!("signature: {:?}", signature);
         }
     }
 }

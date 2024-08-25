@@ -7,6 +7,7 @@ use anchor_client::solana_sdk::signature::read_keypair_file;
 
 use anchor_client::Cluster;
 
+use log::debug;
 use solana_sdk::instruction::Instruction;
 use solana_sdk::transaction::Transaction;
 
@@ -127,13 +128,13 @@ fn main() {
         let mint = &token_mints[i];
         let amount = token_amounts[i];
         if amount >= 0  {
-            println!("balance {}: {}", mint, amount);
+            debug!("balance {}: {}", mint, amount);
             continue
         } 
         let addr = user_token_addrs[i];
 
         // create ATA! 
-        println!("creating ATA for Token {:?}...", mint);
+        debug!("creating ATA for Token {:?}...", mint);
         let accounts = vec![
             AccountMeta::new(owner.pubkey(), true), 
             AccountMeta::new(addr, false), 
@@ -152,7 +153,7 @@ fn main() {
         create_ata_ixs.push(ix);
     }
 
-    println!("creating {} / {} total token accounts...", create_ata_ixs.len(), n);
+    debug!("creating {} / {} total token accounts...", create_ata_ixs.len(), n);
 
     for chunck_ixs in create_ata_ixs.chunks(13) {
         let tx = {
@@ -164,11 +165,11 @@ fn main() {
                 recent_hash,
             )
         };
-        println!("creating {} token accounts in tx...", chunck_ixs.len());
+        debug!("creating {} token accounts in tx...", chunck_ixs.len());
         let signature = send_tx_connection.send_transaction(&tx).unwrap();
-        println!("signature: {}", signature);
+        debug!("signature: {}", signature);
     }
 
-    println!("done setup :)");
+    debug!("done setup :)");
 }
 

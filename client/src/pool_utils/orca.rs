@@ -43,6 +43,7 @@ pub fn get_pool_quote_with_amounts(
         }
 
     } else if curve_type == CurveType::Stable { // stableswap (2 for orca)
+        assert!(amp > 0, "amp must be greater than 0 for Stable curve type");
         let swap_curve = SwapCurve {
             curve_type: CurveType::Stable,
             calculator: Arc::new(StableCurve { amp }),

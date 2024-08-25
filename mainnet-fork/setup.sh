@@ -6,7 +6,9 @@ echo "setting up owner ATAs" &&
 npx ts-node setup_owner.ts &&
 cd get_wsol &&
 npx ts-node index.ts && 
-cd ../../program/ && 
+cd ..
+npx ts-node check_ata_balances.ts
+cd ../program/ && 
 bash localnet_setup.sh
 # echo "testing arb client" &&
 # cd ../client && 

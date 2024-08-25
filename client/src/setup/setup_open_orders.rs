@@ -9,6 +9,7 @@ use anchor_client::{Client, Cluster};
 
 use client::pools::SerumPool;
 
+use log::debug;
 use solana_sdk::transaction::Transaction;
 
 use std::rc::Rc;
@@ -70,7 +71,7 @@ fn main() {
     let total_fee = max_rent_exemption_amount * pool_paths.len() as u64; 
     let lamports_per_sol = 1000000000; 
     let sol_fee = total_fee as f64 / lamports_per_sol as f64;
-    println!("# open orders: {:?} USDC cost: {:?}", pool_paths.len(), sol_fee * 90_f64);
+    debug!("# open orders: {:?} USDC cost: {:?}", pool_paths.len(), sol_fee * 90_f64);
     
     // return; 
     
@@ -136,7 +137,7 @@ fn main() {
         );
         match connection.send_transaction(&tx) {
             Err(e) => {
-                println!("error: {:#?}", e);
+                debug!("error: {:#?}", e);
             }
             Ok(_v) => { }
         }
