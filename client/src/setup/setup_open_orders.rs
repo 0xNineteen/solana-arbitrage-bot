@@ -14,7 +14,7 @@ use solana_sdk::transaction::Transaction;
 
 use std::rc::Rc;
 
-use std::collections::{HashMap};
+use std::collections::HashMap;
 
 use std::vec;
 
@@ -29,7 +29,7 @@ use tmp::accounts as tmp_accounts;
 use tmp::instruction as tmp_instructions;
 
 
-use client::utils::{read_json_dir};
+use client::utils::{get_owner_kp_path, read_json_dir};
 use client::pool::{PoolType, PoolDir};
 use client::constants::*;
 
@@ -40,8 +40,8 @@ fn main() {
 
     env_logger::init();
     // let owner_kp_path = "../../../mainnet.key";     
-    let owner_kp_path = "../mainnet-fork/localnet_owner.key";   
-    let owner = read_keypair_file(owner_kp_path).unwrap();   
+    let owner_kp_path = get_owner_kp_path(&cluster);
+    let owner = read_keypair_file(owner_kp_path.as_str()).unwrap();   
 
     // ** setup RPC connection 
     let connection = RpcClient::new_with_commitment(
@@ -55,7 +55,7 @@ fn main() {
         CommitmentConfig::confirmed() 
     );
     let program = provider.program(*ARB_PROGRAM_ID).unwrap();
-    let owner = read_keypair_file(owner_kp_path).unwrap();   
+    let owner = read_keypair_file(owner_kp_path.as_str()).unwrap();   
 
     let serum_dir = PoolDir {
         tipe: PoolType::SerumPoolType,

@@ -1,3 +1,4 @@
+use anyhow::Result;
 use anchor_client::solana_sdk::pubkey::Pubkey;
 use anchor_client::Program;
 use log::debug;
@@ -69,7 +70,7 @@ pub trait PoolOperations: Debug {
         amount_in: u128,
         mint_in: &Pubkey,
         mint_out: &Pubkey,
-    ) -> u128;
+    ) -> Result<u128>;
     fn swap_ix(
         &self,
         program: &Program<Rc<Keypair>>,

@@ -21,7 +21,7 @@ use tmp::instruction as tmp_instructions;
 
 use client::constants::*;
 use client::pool::PoolType;
-use client::utils::derive_token_address;
+use client::utils::{derive_token_address, get_owner_kp_path};
 
 use solana_sdk::account::Account;
 use solana_sdk::account_info::AccountInfo;
@@ -261,8 +261,9 @@ fn main() {
         layout_v2_span
     };
 
-    let owner_kp_path = "../../mainnet_fork/localnet_owner.key";
-    let owner = read_keypair_file(owner_kp_path).unwrap();
+    let owner_kp_path = get_owner_kp_path(&cluster);
+
+    let owner = read_keypair_file(owner_kp_path.as_str()).unwrap();
     println!("{}", owner.pubkey());
 
     let open_orders = Keypair::new();
@@ -282,7 +283,7 @@ fn main() {
     // setup anchor things
     let provider = Client::new_with_options(cluster, Rc::new(owner), CommitmentConfig::confirmed());
     let program = provider.program(*ARB_PROGRAM_ID).unwrap();
-    let owner = read_keypair_file(owner_kp_path).unwrap();
+    let owner = read_keypair_file(owner_kp_path.as_str()).unwrap();
 
     let init_ix = program
         .request()

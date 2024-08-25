@@ -1,6 +1,7 @@
 use crate::pool::PoolOperations;
+use crate::pool_utils::common_methods::{set_update_accounts, PoolAmountsManupulation};
 use crate::serialize::pool::JSONFeeStructure;
-use crate::serialize::token::{unpack_token_account, Token, WrappedPubkey};
+use crate::serialize::token::{Token, WrappedPubkey};
 use serde;
 use serde::{Deserialize, Serialize};
 use solana_sdk::account::Account;
@@ -41,6 +42,12 @@ pub struct OrcaPool {
     // to set later
     #[serde(skip)]
     pub pool_amounts: HashMap<String, u128>,
+}
+
+impl PoolAmountsManupulation for OrcaPool {
+    fn insert_pool_amounts(&mut self, id: String, amount: u128) {
+        self.pool_amounts.insert(id, amount);
+    }
 }
 
 impl PoolOperations for OrcaPool {
@@ -89,9 +96,22 @@ impl PoolOperations for OrcaPool {
         scaled_amount_in: u128,
         mint_in: &Pubkey,
         mint_out: &Pubkey,
-    ) -> u128 {
-        let pool_src_amount = self.pool_amounts.get(&mint_in.to_string()).unwrap();
-        let pool_dst_amount = self.pool_amounts.get(&mint_out.to_string()).unwrap();
+    ) -> anyhow::Result<u128> {
+        let pool_src_amount = self.pool_amounts.get(&mint_in.to_string()).ok_or_else(|| {
+            anyhow::Error::msg(format!(
+                "pool amount not found for mint: {}",
+                mint_in.to_string()
+            ))
+        })?;
+        let pool_dst_amount = self
+            .pool_amounts
+            .get(&mint_out.to_string())
+            .ok_or_else(|| {
+                anyhow::Error::msg(format!(
+                    "pool amount not found for mint: {}",
+                    mint_out.to_string()
+                ))
+            })?;
 
         // compute fees
         let trader_fee = &self.fee_structure.trader_fee;
@@ -125,7 +145,6 @@ impl PoolOperations for OrcaPool {
             *pool_dst_amount,
             None,
         )
-        .unwrap()
     }
 
     fn get_update_accounts(&self) -> Vec<Pubkey> {
@@ -148,22 +167,7 @@ impl PoolOperations for OrcaPool {
     }
 
     fn set_update_accounts(&mut self, accounts: Rc<Vec<Option<Account>>>, _cluster: &Cluster) {
-        let ids: Vec<String> = self
-            .get_mints()
-            .iter()
-            .map(|mint| mint.to_string())
-            .collect();
-        let id0 = &ids[0];
-        let id1 = &ids[1];
-
-        let acc_data0 = &accounts[0].as_ref().unwrap().data;
-        let acc_data1 = &accounts[1].as_ref().unwrap().data;
-
-        let amount0 = unpack_token_account(acc_data0).amount as u128;
-        let amount1 = unpack_token_account(acc_data1).amount as u128;
-
-        self.pool_amounts.insert(id0.clone(), amount0);
-        self.pool_amounts.insert(id1.clone(), amount1);
+        set_update_accounts(self, accounts, _cluster);
     }
 
     fn get_name(&self) -> String {

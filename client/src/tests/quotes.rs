@@ -10,6 +10,7 @@ use solana_sdk::transaction::Transaction;
 use spl_token::instruction::mint_to;
 
 use std::rc::Rc;
+use std::sync::Once;
 use std::vec;
 
 use tmp::accounts as tmp_accounts;
@@ -17,7 +18,16 @@ use tmp::instruction as tmp_ix;
 
 use crate::constants::*;
 use crate::pool::{pool_factory, PoolOperations, PoolType};
-use crate::utils::{derive_token_address, read_json_dir};
+use crate::utils::{derive_token_address, get_owner_kp_path, read_json_dir};
+
+static INIT: Once = Once::new();
+
+fn init_logger() {
+    INIT.call_once(|| {
+        std::env::set_var("RUST_LOG", "debug");
+        env_logger::init();
+    });
+}
 
 #[test]
 fn serum() {
@@ -55,18 +65,19 @@ fn orca() {
 }
 
 fn test_all_pool_quotes(pool_dir: String, pool_tipe: PoolType) {
+    init_logger();
     // setup stuff
     let cluster = Cluster::Localnet;
     let connection = RpcClient::new_with_commitment(cluster.url(), CommitmentConfig::confirmed());
 
-    let owner_kp_path = "../mainnet-fork/localnet_owner.key";
+    let owner_kp_path = get_owner_kp_path(&cluster);
     // setup anchor things
-    let owner = read_keypair_file(owner_kp_path).unwrap();
+    let owner = read_keypair_file(owner_kp_path.as_str()).unwrap();
     debug!("owner: {}", owner.pubkey());
 
     let provider = Client::new_with_options(cluster, Rc::new(owner), CommitmentConfig::confirmed());
     let program = provider.program(*ARB_PROGRAM_ID).unwrap();
-    let owner = read_keypair_file(owner_kp_path).unwrap();
+    let owner = read_keypair_file(owner_kp_path.as_str()).unwrap();
 
     let pool_paths = read_json_dir(&pool_dir);
     let mut err_count = 0;
@@ -77,7 +88,7 @@ fn test_all_pool_quotes(pool_dir: String, pool_tipe: PoolType) {
         let contents = std::fs::read_to_string(&pool_path).unwrap();
         let mut pool = pool_factory(&pool_tipe, &contents);
 
-        debug!("{}", pool_path);
+        debug!("Pool path: {}", pool_path);
         let err_flag = test_pool_quote(&mut pool, &pool_path, &connection, &program, &owner);
         err_count += err_flag;
     }
@@ -93,7 +104,12 @@ fn test_pool_quote(
 ) -> u64 {
     // get token reserve addrs
     let update_accounts = pool.get_update_accounts();
+    debug!("update accounts: {:#?}", update_accounts);
     let accounts = connection.get_multiple_accounts(&update_accounts).unwrap();
+    debug!(
+        "Received accounts info for update accounts: {:#?}",
+        accounts
+    );
     pool.set_update_accounts(Rc::new(accounts), &Cluster::Localnet);
 
     // get a quote
@@ -126,22 +142,32 @@ fn test_pool_quote(
     debug!("Amount In: {}", amount_in);
 
     let mut loop_count = 0;
-    let mut quote_out_amount;
+    let mut quote_out_amount: u128 = 0;
     loop {
-        quote_out_amount = pool.get_quote_with_amounts_scaled(amount_in, mint_in, mint_out);
+        let quote_out_amount_res = pool.get_quote_with_amounts_scaled(amount_in, mint_in, mint_out);
         debug!(
-            "Calculated quote with amount scaled: {}, amount in: {}",
-            quote_out_amount, amount_in
+            "Calculated quote with amount scaled: {:?}, amount in: {}, loop_count {}",
+            quote_out_amount_res, amount_in, loop_count
         );
+
+        if quote_out_amount_res.is_ok() {
+            quote_out_amount = quote_out_amount_res.unwrap();
+        } else {
+            debug!("pool path: {}", pool_path);
+            debug!("quote error!");
+            return 1; // error
+        }
 
         if quote_out_amount == 0 {
             amount_in += 100 * 10_u128.pow(src_scale as u32);
-        } else if loop_count > 100_000 {
+        } else {
+            break;
+        }
+
+        if loop_count > 1000 {
             debug!("pool path: {}", pool_path);
             debug!("loop count error!");
             return 1; // error
-        } else {
-            break;
         }
         loop_count += 1
     }
@@ -238,6 +264,7 @@ fn test_pool_quote(
                 None => {
                     // parse logs for last output amount
                     let mut actual_amount_out = 0;
+                    debug!("{:#?}", s.value.logs);
                     for log in s.value.logs.unwrap() {
                         if log.contains("swap amount out") {
                             let split = log.split("swap amount out: ").collect::<Vec<_>>();
@@ -245,7 +272,7 @@ fn test_pool_quote(
                             actual_amount_out = amount_out;
                         }
                     }
-                    // debug!("{:#?}", s.value.logs);
+                    debug!("Actual amount out: {}", actual_amount_out);
                     assert!(actual_amount_out > 0);
 
                     // delta 1 u128 (rounding?)

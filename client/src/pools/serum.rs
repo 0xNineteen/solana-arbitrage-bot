@@ -2,6 +2,7 @@ use core::panic;
 
 use crate::pool::PoolOperations;
 use crate::serialize::token::WrappedPubkey;
+use log::debug;
 use serde;
 use serde::{Deserialize, Serialize};
 use solana_sdk::signature::Keypair;
@@ -25,7 +26,7 @@ use solana_sdk::account::Account;
 use solana_sdk::account_info::AccountInfo;
 use solana_sdk::clock::Epoch;
 
-use anchor_spl::dex::serum_dex::matching::Side;
+// use anchor_spl::dex::serum_dex::matching::Side;
 
 use std::str::FromStr;
 use tmp::accounts as tmp_accounts;
@@ -209,7 +210,7 @@ impl PoolOperations for SerumPool {
         amount_in: u128,
         mint_in: &Pubkey,
         _mint_out: &Pubkey,
-    ) -> u128 {
+    ) -> anyhow::Result<u128> {
         let market_pk = self.own_address.0;
         let fee_tier = FeeTier::from_srm_and_msrm_balances(&market_pk, 0, 0);
         let mut iteration = Iteration {
@@ -222,17 +223,47 @@ impl PoolOperations for SerumPool {
         let asks_acc = &self.accounts.as_ref()[2];
 
         // clone accounts for simulation (improve later?)
-        let market_acc = &mut market_acc.clone().unwrap();
-        let bid_acc = &mut bids_acc.clone().unwrap();
-        let ask_acc = &mut asks_acc.clone().unwrap();
+        let market_acc = &mut market_acc.clone().ok_or_else(|| {
+            anyhow::Error::msg(format!(
+                "market account not found for accounts: {:?}",
+                self.accounts
+            ))
+        })?;
+        let bid_acc = &mut bids_acc.clone().ok_or_else(|| {
+            anyhow::Error::msg(format!(
+                "bids account not found for accounts: {:?}",
+                self.accounts
+            ))
+        })?;
+        let ask_acc = &mut asks_acc.clone().ok_or_else(|| {
+            anyhow::Error::msg(format!(
+                "asks account not found for accounts: {:?}",
+                self.accounts
+            ))
+        })?;
 
         let market_acc_info = &account_info(&self.own_address.0, market_acc);
         let bids_acc = &account_info(&self.bids.0, bid_acc);
         let asks_acc = &account_info(&self.asks.0, ask_acc);
 
-        let mut market = Market::load(market_acc_info, &SERUM_PROGRAM_ID).unwrap();
-        let mut bids = market.load_bids_mut(bids_acc).unwrap();
-        let mut asks = market.load_asks_mut(asks_acc).unwrap();
+        let mut market = Market::load(market_acc_info, &SERUM_PROGRAM_ID).map_err(|e| {
+            anyhow::Error::msg(format!(
+                "failed to load market from account: {:?}, error: {:?}",
+                market_acc_info, e
+            ))
+        })?;
+        let mut bids = market.load_bids_mut(bids_acc).map_err(|e| {
+            anyhow::Error::msg(format!(
+                "failed to load bids from market: {:?}, error: {:?}",
+                market_acc_info, e
+            ))
+        })?;
+        let mut asks = market.load_asks_mut(asks_acc).map_err(|e| {
+            anyhow::Error::msg(format!(
+                "failed to load asks from market: {:?}, error: {:?}",
+                market_acc_info, e
+            ))
+        })?;
 
         let mut ob = OrderBookState {
             bids: bids.deref_mut(),
@@ -248,7 +279,7 @@ impl PoolOperations for SerumPool {
                     break;
                 }
             }
-            iteration.amount_out as u128
+            Ok(iteration.amount_out as u128)
         } else if *mint_in == self.base_mint.0 {
             // ask: base -> quote
             loop {
@@ -257,9 +288,9 @@ impl PoolOperations for SerumPool {
                     break;
                 }
             }
-            iteration.amount_out as u128
+            Ok(iteration.amount_out as u128)
         } else {
-            panic!("invalid mints");
+            Err(anyhow::Error::msg("invalid mints"))
         }
     }
 
@@ -318,9 +349,27 @@ impl PoolOperations for SerumPool {
     }
 
     fn can_trade(&self, mint_in: &Pubkey, _mint_out: &Pubkey) -> bool {
+        debug!(
+            "can_trade {}, {}, {}",
+            mint_in,
+            _mint_out,
+            self.accounts.len()
+        );
         let market_acc = &self.accounts.as_ref()[0];
         let bids_acc = &self.accounts.as_ref()[1];
         let asks_acc = &self.accounts.as_ref()[2];
+
+        if market_acc.is_none() || bids_acc.is_none() || asks_acc.is_none() {
+            debug!(
+                "missing accounts, market: {}, bids: {}, asks: {}",
+                market_acc.is_none(),
+                bids_acc.is_none(),
+                asks_acc.is_none(),
+            );
+            return false;
+        }
+
+        debug!("accounts found");
 
         // clone accounts for simulation (improve later?)
         let market_acc = &mut market_acc.clone().unwrap();

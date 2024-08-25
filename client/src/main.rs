@@ -23,7 +23,7 @@ use client::constants::*;
 use client::pool::{pool_factory, PoolDir, PoolType};
 use client::serialize::token::unpack_token_account;
 use client::utils::{
-    derive_token_address, read_json_dir, PoolEdge, PoolGraph, PoolIndex, PoolQuote,
+    derive_token_address, read_json_dir, PoolEdge, PoolGraph, PoolIndex, PoolQuote, get_owner_kp_path
 };
 
 #[derive(Parser, Debug)]
@@ -58,11 +58,7 @@ fn main() {
 
     env_logger::init();
 
-    let owner_kp_path = match cluster {
-        Cluster::Localnet => "../mainnet-fork/localnet_owner.key",
-        Cluster::Mainnet => "/Users/ggrigori/solana/wallets/my_solana_wallet/my-keypair.json",
-        _ => panic!("shouldnt get here"),
-    };
+    let owner_kp_path = get_owner_kp_path(&cluster);
 
     // ** setup RPC connection
     let connection_url = match cluster {

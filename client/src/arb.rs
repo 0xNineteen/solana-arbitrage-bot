@@ -33,7 +33,7 @@ pub struct Arbitrager {
     pub connection: RpcClient,
 }
 
-impl  Arbitrager {
+impl Arbitrager {
     pub fn brute_force_search(
         &self,
         start_mint_idx: usize,
@@ -72,9 +72,19 @@ impl  Arbitrager {
             let dst_mint = self.token_mints[dst_mint_idx];
 
             for pool in pools {
-                let new_balance =
+                let new_balance_res =
                     pool.0
                         .get_quote_with_amounts_scaled(curr_balance, &src_mint, &dst_mint);
+
+                if new_balance_res.is_err() {
+                    info!(
+                        "Error getting quote with amounts scaled {:?}",
+                        new_balance_res.unwrap_err(),
+                    );
+                    continue;
+                }
+
+                let new_balance = new_balance_res.unwrap();
 
                 let mut new_path = path.clone();
                 new_path.push(dst_mint_idx);

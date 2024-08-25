@@ -6,8 +6,7 @@
 ### HOW TO ACTUALLY START MAINNET (BECAUSE YOU FORGET IT EVERY TIME)
 
 1. `bash init_new_scrape.sh`: start local val with all scrapped accounts
-2. `bash start_localnet.sh` - start local without scrapping accounts
-3. `bash setup.sh`: setup + fund all ATAs of owner + deploy and init anchor ARB program (run in a separate terminal)
+2. from another terminal when #1 is running, run `bash setup.sh`: setup + fund all ATAs of owner + deploy and init anchor ARB program (run in a separate terminal)
 
 
 # DEVELOPER INFO, don't run unless you have a backup.

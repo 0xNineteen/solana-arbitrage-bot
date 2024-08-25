@@ -1,10 +1,19 @@
 use crate::constants::*;
 use crate::pool::PoolOperations;
 use anchor_client::solana_sdk::pubkey::Pubkey;
+use anchor_client::Cluster;
 use std::collections::HashMap;
 use std::fs;
 use std::rc::Rc;
 use std::str::FromStr;
+
+pub fn get_owner_kp_path(cluster: &Cluster) -> String {
+    match cluster {
+        Cluster::Localnet => "../mainnet-fork/localnet_owner.key".to_string(),
+        Cluster::Mainnet => "~/.config/solana/id.json".to_string(),
+        _ => panic!("invalid cluster type"),
+    }
+}
 
 pub fn read_json_dir(dir: &String) -> Vec<String> {
     let _paths = fs::read_dir(dir).unwrap();

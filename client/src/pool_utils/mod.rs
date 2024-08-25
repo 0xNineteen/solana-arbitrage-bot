@@ -11,3 +11,6 @@ pub mod stable;
 // pool specific details 
 pub mod orca;
 pub mod serum;
+
+// common stuff
+pub mod common_methods;
