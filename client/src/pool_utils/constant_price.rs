@@ -1,11 +1,11 @@
 //! Simple constant price swap curve, set at init
 use {
     crate::{
+        error::SwapError,
         pool_utils::calculator::{
             map_zero_to_none, CurveCalculator, DynPack, RoundDirection, SwapWithoutFeesResult,
             TradeDirection, TradingTokenResult,
         },
-        error::SwapError,
     },
     arrayref::{array_mut_ref, array_ref},
     solana_program::{
@@ -216,8 +216,8 @@ impl CurveCalculator for ConstantPriceCurve {
     ) -> Option<PreciseNumber> {
         let swap_token_b_value = swap_token_b_amount.checked_mul(self.token_b_price as u128)?;
         // special logic in case we're close to the limits, avoid overflowing u128
-        let value = if swap_token_b_value.saturating_sub(std::u64::MAX.into())
-            > (std::u128::MAX.saturating_sub(std::u64::MAX.into()))
+        let value = if swap_token_b_value.saturating_sub(u64::MAX.into())
+            > (u128::MAX.saturating_sub(u64::MAX.into()))
         {
             swap_token_b_value
                 .checked_div(2)?
