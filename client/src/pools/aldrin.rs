@@ -14,14 +14,15 @@ use solana_sdk::account::Account;
 use solana_sdk::instruction::Instruction;
 
 use solana_sdk::signature::Keypair;
+use spl_token_swap::curve::base::CurveType;
+use spl_token_swap::curve::fees::Fees;
 use tmp::accounts as tmp_accounts;
 use tmp::instruction as tmp_ix;
 
 use crate::constants::*;
 use crate::pool::PoolOperations;
-use crate::pool_utils::base::CurveType;
 use crate::pool_utils::common_methods::{set_update_accounts, PoolAmountsManupulation};
-use crate::pool_utils::{fees::Fees, orca::get_pool_quote_with_amounts};
+use crate::pool_utils::orca::get_pool_quote_with_amounts;
 use crate::serialize::pool::JSONFeeStructure;
 use crate::serialize::token::{Token, WrappedPubkey};
 use crate::utils::{derive_token_address, str2pubkey};
@@ -133,20 +134,14 @@ impl PoolOperations for AldrinPool {
         mint_out: &Pubkey,
     ) -> anyhow::Result<u128> {
         let pool_src_amount = *self.pool_amounts.get(&mint_in.to_string()).ok_or_else(|| {
-            anyhow::Error::msg(format!(
-                "pool amount not found for mint: {}",
-                mint_in
-            ))
+            anyhow::Error::msg(format!("pool amount not found for mint: {}", mint_in))
         })?;
-        let pool_dst_amount =
-            *self.pool_amounts
-                .get(&mint_out.to_string())
-                .ok_or_else(|| {
-                    anyhow::Error::msg(format!(
-                        "pool amount not found for mint: {}",
-                        mint_out
-                    ))
-                })?;
+        let pool_dst_amount = *self
+            .pool_amounts
+            .get(&mint_out.to_string())
+            .ok_or_else(|| {
+                anyhow::Error::msg(format!("pool amount not found for mint: {}", mint_out))
+            })?;
 
         // compute fees
         let trader_fee = &self.fees.trader_fee;

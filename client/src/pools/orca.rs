@@ -6,6 +6,8 @@ use serde;
 use serde::{Deserialize, Serialize};
 use solana_sdk::account::Account;
 use solana_sdk::signature::Keypair;
+use spl_token_swap::curve::base::CurveType;
+use spl_token_swap::curve::fees::Fees;
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::rc::Rc;
@@ -20,8 +22,7 @@ use tmp::accounts as tmp_accounts;
 use tmp::instruction as tmp_ix;
 
 use crate::constants::*;
-use crate::pool_utils::base::CurveType;
-use crate::pool_utils::{fees::Fees, orca::get_pool_quote_with_amounts};
+use crate::pool_utils::orca::get_pool_quote_with_amounts;
 use crate::utils::{derive_token_address, str2pubkey};
 
 #[derive(Deserialize, Serialize, Debug, Clone)]

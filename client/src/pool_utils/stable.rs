@@ -1,20 +1,21 @@
 //! The curve.fi invariant calculator.
 use {
-    crate::{
-        error::SwapError,
-        pool_utils::calculator::{
+    arrayref::{array_mut_ref, array_ref},
+    solana_program::{
+        program_error::ProgramError,
+        program_pack::{IsInitialized, Pack, Sealed},
+    },
+    spl_math::precise_number::PreciseNumber,
+    spl_token_swap::{
+        curve::calculator::{
             CurveCalculator, DynPack, RoundDirection, SwapWithoutFeesResult, TradeDirection,
             TradingTokenResult,
         },
-    }, arrayref::{array_mut_ref, array_ref}, log::debug, solana_program::{
-        program_error::ProgramError,
-        program_pack::{IsInitialized, Pack, Sealed},
-    }, spl_math::{checked_ceil_div::CheckedCeilDiv, precise_number::PreciseNumber, uint::U256}, std::convert::TryFrom
+        error::SwapError,
+    },
+    stable_swap_math::curve::StableSwap,
+    std::time,
 };
-
-const N_COINS: u8 = 2;
-const N_COINS_SQUARED: u8 = 4;
-const ITERATIONS: u8 = 32;
 
 // CUSTOM STABLE COMPUTATION WITH PERCISION_MULTIPLIERS
 // used for mercurial pools + saber pools
@@ -25,6 +26,18 @@ pub struct Stable {
     pub fee_denominator: u128,
 }
 
+impl From<&Stable> for StableSwap {
+    fn from(value: &Stable) -> Self {
+        let current_ts: i64 = time::SystemTime::now()
+            .duration_since(time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs()
+            .try_into()
+            .unwrap();
+        StableSwap::new(value.amp, value.amp, current_ts, current_ts, current_ts)
+    }
+}
+
 impl Stable {
     pub fn get_quote(
         &self,
@@ -32,6 +45,7 @@ impl Stable {
         percision_multipliers: [u64; 2],
         scaled_amount_in: u128,
     ) -> u128 {
+        let stable_swap: StableSwap = self.into();
         // stableswap with percision multipliers
         let xp: Vec<u128> = vec![
             pool_amounts[0] * percision_multipliers[0] as u128,
@@ -39,11 +53,13 @@ impl Stable {
         ];
         let dx = scaled_amount_in * percision_multipliers[0] as u128;
 
+        let d = stable_swap
+            .compute_d(xp[0].try_into().unwrap(), xp[1].try_into().unwrap())
+            .unwrap();
+
         let x = xp[0] + dx;
-        let leverage = compute_a(self.amp).unwrap();
-        let d = compute_d(leverage, xp[0], xp[1]).unwrap();
-        let y = compute_new_destination_amount(leverage, x, d).unwrap();
-        let dy = xp[1] - y;
+        let y = stable_swap.compute_y(x.try_into().unwrap(), d).unwrap();
+        let dy: u128 = xp[1] - (y as u128);
         let out_amount = dy.checked_div(percision_multipliers[1] as u128).unwrap();
 
         // reduce fees at the end
@@ -57,38 +73,6 @@ impl Stable {
     }
 }
 
-/// Calculates A for deriving D
-///
-/// Per discussion with the designer and writer of stable curves, this A is not
-/// the same as the A from the whitepaper, it's actually `A * n**(n-1)`, so when
-/// you set A, you actually set `A * n**(n-1)`. This is because `D**n / prod(x)`
-/// loses precision with a huge A value.
-///
-/// There is little information to document this choice, but the original contracts
-/// use this same convention, see a comment in the code at:
-/// https://github.com/curvefi/curve-contract/blob/b0bbf77f8f93c9c5f4e415bce9cd71f0cdee960e/contracts/pool-templates/base/SwapTemplateBase.vy#L136
-pub fn compute_a(amp: u64) -> Option<u64> {
-    amp.checked_mul(N_COINS as u64)
-}
-
-/// Returns self to the power of b
-fn checked_u8_power(a: &U256, b: u8) -> Option<U256> {
-    let mut result = *a;
-    for _ in 1..b {
-        result = result.checked_mul(*a)?;
-    }
-    Some(result)
-}
-
-/// Returns self multiplied by b
-fn checked_u8_mul(a: &U256, b: u8) -> Option<U256> {
-    let mut result = *a;
-    for _ in 1..b {
-        result = result.checked_add(*a)?;
-    }
-    Some(result)
-}
-
 /// StableCurve struct implementing CurveCalculator
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct StableCurve {
@@ -96,112 +80,15 @@ pub struct StableCurve {
     pub amp: u64,
 }
 
-/// d = (leverage * sum_x + d_product * n_coins) * initial_d / ((leverage - 1) * initial_d + (n_coins + 1) * d_product)
-fn calculate_step(initial_d: &U256, leverage: u64, sum_x: u128, d_product: &U256) -> Option<U256> {
-    let leverage_mul = U256::from(leverage).checked_mul(sum_x.into())?;
-    let d_p_mul = checked_u8_mul(d_product, N_COINS)?;
-
-    let l_val = leverage_mul.checked_add(d_p_mul)?.checked_mul(*initial_d)?;
-
-    let leverage_sub = initial_d.checked_mul((leverage.checked_sub(1)?).into())?;
-    let n_coins_sum = checked_u8_mul(d_product, N_COINS.checked_add(1)?)?;
-
-    let r_val = leverage_sub.checked_add(n_coins_sum)?;
-
-    let res = l_val.checked_div(r_val);
-    res
-}
-
-/// Compute stable swap invariant (D)
-/// Equation:
-/// A * sum(x_i) * n**n + D = A * D * n**n + D**(n+1) / (n**n * prod(x_i))
-pub fn compute_d(leverage: u64, amount_a: u128, amount_b: u128) -> Option<u128> {
-    let amount_a_times_coins =
-        checked_u8_mul(&U256::from(amount_a), N_COINS)?.checked_add(U256::one())?;
-    let amount_b_times_coins =
-        checked_u8_mul(&U256::from(amount_b), N_COINS)?.checked_add(U256::one())?;
-    let sum_x = amount_a.checked_add(amount_b)?; // sum(x_i), a.k.a S
-    if sum_x == 0 {
-        Some(0)
-    } else {
-        let mut d_previous: U256;
-        let mut d: U256 = sum_x.into();
-
-        // Newton's method to approximate D
-        for _ in 0..ITERATIONS {
-            let mut d_product = d;
-            d_product = d_product
-                .checked_mul(d)?
-                .checked_div(amount_a_times_coins)?;
-            d_product = d_product
-                .checked_mul(d)?
-                .checked_div(amount_b_times_coins)?;
-            d_previous = d;
-            //d = (leverage * sum_x + d_p * n_coins) * d / ((leverage - 1) * d + (n_coins + 1) * d_p);
-            d = calculate_step(&d, leverage, sum_x, &d_product)?;
-            // Equality with the precision of 1
-            if d.abs_diff(d_previous) <= 1.into() {
-                break;
-            }
-        }
-        match u128::try_from(d) {
-            Ok(v) => Some(v),
-            Err(err) => {
-                debug!("Error converting u128 from U256: d: {},  {}", d, err);
-                None
-            }
-        }
-    }
-}
-
-/// Compute swap amount `y` in proportion to `x`
-/// Solve for y:
-/// y**2 + y * (sum' - (A*n**n - 1) * D / (A * n**n)) = D ** (n + 1) / (n ** (2 * n) * prod' * A)
-/// y**2 + b*y = c
-pub fn compute_new_destination_amount(
-    leverage: u64,
-    new_source_amount: u128,
-    d_val: u128,
-) -> Option<u128> {
-    // Upscale to U256
-    let leverage: U256 = leverage.into();
-    let new_source_amount: U256 = new_source_amount.into();
-    let d_val: U256 = d_val.into();
-
-    // sum' = prod' = x
-    // c =  D ** (n + 1) / (n ** (2 * n) * prod' * A)
-    let n_coins = N_COINS.checked_add(1)?;
-    let c = checked_u8_power(&d_val, n_coins)?
-        .checked_div(checked_u8_mul(&new_source_amount, N_COINS_SQUARED)?.checked_mul(leverage)?)?;
-
-    // b = sum' - (A*n**n - 1) * D / (A * n**n) = sum' + D/(A*n**n) - D
-    let b = new_source_amount.checked_add(d_val.checked_div(leverage)?)?;
-
-    // Solve for y by approximating: y**2 + b*y = c
-    // Using Newton's method
-    // y = (y**2 + c)/(2*y + b)
-    let mut y: U256 = d_val;
-    for _ in 0..ITERATIONS {
-        let numerator = checked_u8_power(&y, 2)?.checked_add(c)?;
-        let denominator = checked_u8_mul(&y, 2)?.checked_add(b)?.checked_sub(d_val)?;
-
-        if let Some((y_new, _)) = numerator.checked_ceil_div(denominator) {
-            if y_new.abs_diff(y) <= 1.into() {
-                break;
-            } else {
-                y = y_new;
-            }
-        } else {
-            y = 0.into();
-            break;
-        }
-    }
-    match u128::try_from(y) {
-        Ok(v) => Some(v),
-        Err(err) => {
-            debug!("Error converting u128 from U256: y: {},  {}", y, err);
-            None
-        }
+impl From<&StableCurve> for StableSwap {
+    fn from(value: &StableCurve) -> Self {
+        let current_ts: i64 = time::SystemTime::now()
+            .duration_since(time::UNIX_EPOCH)
+            .unwrap()
+            .as_secs()
+            .try_into()
+            .unwrap();
+        StableSwap::new(value.amp, value.amp, current_ts, current_ts, current_ts)
     }
 }
 
@@ -220,16 +107,18 @@ impl CurveCalculator for StableCurve {
                 destination_amount_swapped: 0,
             });
         }
-        let leverage = compute_a(self.amp)?;
+        let stable_swap: StableSwap = self.into();
 
         let new_source_amount = swap_source_amount.checked_add(source_amount)?;
-        let new_destination_amount = compute_new_destination_amount(
-            leverage,
-            new_source_amount,
-            compute_d(leverage, swap_source_amount, swap_destination_amount)?,
+        let new_destination_amount = stable_swap.compute_y(
+            new_source_amount.try_into().ok()?,
+            stable_swap.compute_d(
+                swap_source_amount.try_into().ok()?,
+                swap_destination_amount.try_into().ok()?,
+            )?,
         )?;
 
-        let amount_swapped = swap_destination_amount.checked_sub(new_destination_amount)?;
+        let amount_swapped = swap_destination_amount.checked_sub(new_destination_amount.into())?;
 
         Some(SwapWithoutFeesResult {
             source_amount_swapped: source_amount,
@@ -294,22 +183,24 @@ impl CurveCalculator for StableCurve {
         if source_amount == 0 {
             return Some(0);
         }
-        let leverage = compute_a(self.amp)?;
-        let d0 = PreciseNumber::new(compute_d(
-            leverage,
-            swap_token_a_amount,
-            swap_token_b_amount,
-        )?)?;
+        let stable_swap: StableSwap = self.into();
+
+        let d = stable_swap.compute_d(
+            swap_token_a_amount.try_into().ok()?,
+            swap_token_b_amount.try_into().ok()?,
+        )?;
+
+        let d0 = PreciseNumber::new(d.as_u128())?;
         let (deposit_token_amount, other_token_amount) = match trade_direction {
             TradeDirection::AtoB => (swap_token_a_amount, swap_token_b_amount),
             TradeDirection::BtoA => (swap_token_b_amount, swap_token_a_amount),
         };
         let updated_deposit_token_amount = deposit_token_amount.checked_add(source_amount)?;
-        let d1 = PreciseNumber::new(compute_d(
-            leverage,
-            updated_deposit_token_amount,
-            other_token_amount,
-        )?)?;
+        let d_new = stable_swap.compute_d(
+            updated_deposit_token_amount.try_into().ok()?,
+            other_token_amount.try_into().ok()?,
+        )?;
+        let d1 = PreciseNumber::new(d_new.as_u128())?;
         let diff = d1.checked_sub(&d0)?;
         let final_amount =
             (diff.checked_mul(&PreciseNumber::new(pool_supply)?))?.checked_div(&d0)?;
@@ -327,22 +218,23 @@ impl CurveCalculator for StableCurve {
         if source_amount == 0 {
             return Some(0);
         }
-        let leverage = compute_a(self.amp)?;
-        let d0 = PreciseNumber::new(compute_d(
-            leverage,
-            swap_token_a_amount,
-            swap_token_b_amount,
-        )?)?;
+        let stable_swap: StableSwap = self.into();
+        let d = stable_swap.compute_d(
+            swap_token_a_amount.try_into().ok()?,
+            swap_token_b_amount.try_into().ok()?,
+        )?;
+        let d0 = PreciseNumber::new(d.as_u128())?;
         let (withdraw_token_amount, other_token_amount) = match trade_direction {
             TradeDirection::AtoB => (swap_token_a_amount, swap_token_b_amount),
             TradeDirection::BtoA => (swap_token_b_amount, swap_token_a_amount),
         };
         let updated_deposit_token_amount = withdraw_token_amount.checked_sub(source_amount)?;
-        let d1 = PreciseNumber::new(compute_d(
-            leverage,
-            updated_deposit_token_amount,
-            other_token_amount,
-        )?)?;
+        let d_new = stable_swap.compute_d(
+            updated_deposit_token_amount.try_into().ok()?,
+            other_token_amount.try_into().ok()?,
+        )?;
+
+        let d1 = PreciseNumber::new(d_new.as_u128())?;
         let diff = d0.checked_sub(&d1)?;
         let final_amount =
             (diff.checked_mul(&PreciseNumber::new(pool_supply)?))?.checked_div(&d0)?;
@@ -354,38 +246,12 @@ impl CurveCalculator for StableCurve {
         swap_token_a_amount: u128,
         swap_token_b_amount: u128,
     ) -> Option<PreciseNumber> {
-        #[cfg(not(any(test, feature = "fuzz")))]
-        {
-            let leverage = compute_a(self.amp)?;
-            PreciseNumber::new(compute_d(
-                leverage,
-                swap_token_a_amount,
-                swap_token_b_amount,
-            )?)
-        }
-        #[cfg(any(test, feature = "fuzz"))]
-        {
-            use roots::{find_roots_cubic_normalized, Roots};
-            let x = swap_token_a_amount as f64;
-            let y = swap_token_b_amount as f64;
-            let c = (4.0 * (self.amp as f64)) - 1.0;
-            let d = 16.0 * (self.amp as f64) * x * y * (x + y);
-            let roots = find_roots_cubic_normalized(0.0, c, d);
-            let x0 = match roots {
-                Roots::No(_) => panic!("No roots found for cubic equations"),
-                Roots::One(x) => x[0],
-                Roots::Two(_) => panic!("Two roots found for cubic, mathematically impossible"),
-                Roots::Three(x) => x[1],
-                Roots::Four(_) => panic!("Four roots found for cubic, mathematically impossible"),
-            };
-
-            let root_uint = (x0 * ((10f64).powf(11.0))).round() as u128;
-            let precision = PreciseNumber::new(10)?.checked_pow(11)?;
-            let two = PreciseNumber::new(2)?;
-            PreciseNumber::new(root_uint)?
-                .checked_div(&precision)?
-                .checked_div(&two)
-        }
+        let stable_swap: StableSwap = self.into();
+        let _d = stable_swap.compute_d(
+            swap_token_a_amount.try_into().ok()?,
+            swap_token_b_amount.try_into().ok()?,
+        )?;
+        PreciseNumber::new(_d.as_u128())
     }
 
     fn validate(&self) -> Result<(), SwapError> {
@@ -419,29 +285,5 @@ impl DynPack for StableCurve {
     fn pack_into_slice(&self, output: &mut [u8]) {
         let amp = array_mut_ref![output, 0, 8];
         *amp = self.amp.to_le_bytes();
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use super::compute_new_destination_amount;
-
-    #[test]
-    pub fn test_compute_new_destination_amount() {
-        let leverage = 100;
-        let x = 29620354205;
-        let d = 18624644;
-        let res = compute_new_destination_amount(leverage, x, d);
-        assert!(res.is_some())
-    }
-
-    // leverage: 60, x: 56006462578, d: 286103437532
-    #[test]
-    pub fn test_compute_new_destination_amount2() {
-        let leverage = 60;
-        let x = 56006462578;
-        let d = 286103437532;
-        let res = compute_new_destination_amount(leverage, x, d);
-        assert!(res.is_some())
     }
 }

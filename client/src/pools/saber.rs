@@ -1,5 +1,6 @@
 use crate::pool::PoolOperations;
 use crate::pool_utils::common_methods::{set_update_accounts, PoolAmountsManupulation};
+use crate::pool_utils::stable::Stable;
 use crate::serialize::token::{Token, WrappedPubkey};
 use serde;
 use serde::{Deserialize, Serialize};
@@ -19,7 +20,6 @@ use tmp::accounts as tmp_accounts;
 use tmp::instruction as tmp_ix;
 
 use crate::constants::*;
-use crate::pool_utils::stable::Stable;
 use crate::utils::{derive_token_address, str2pubkey};
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
