@@ -1,0 +1,83 @@
+{
+  "type": "Standard",
+  "programId": "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8",
+  "id": "11GRaYGfuX2QzJZnCKquetBbdri7ioNNPRmt6WTZsnR",
+  "mintA": {
+    "chainId": 101,
+    "address": "CLHKz9nfymRAiJj7skqmVvrZMxwksoFv4rcKGig4EcR",
+    "programId": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+    "logoURI": "https://img-v1.raydium.io/icon/CLHKz9nfymRAiJj7skqmVvrZMxwksoFv4rcKGig4EcR.png",
+    "symbol": "GTA6",
+    "name": "GTA6",
+    "decimals": 9,
+    "tags": [],
+    "extensions": {}
+  },
+  "mintB": {
+    "chainId": 101,
+    "address": "So11111111111111111111111111111111111111112",
+    "programId": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+    "logoURI": "https://img-v1.raydium.io/icon/So11111111111111111111111111111111111111112.png",
+    "symbol": "WSOL",
+    "name": "Wrapped SOL",
+    "decimals": 9,
+    "tags": [],
+    "extensions": {}
+  },
+  "price": 1.0646709610366242e-10,
+  "mintAmountA": 66984930.18966329,
+  "mintAmountB": 0.007131691,
+  "feeRate": 0.0025,
+  "openTime": "1699978800",
+  "tvl": 2.16,
+  "day": {
+    "volume": 0,
+    "volumeQuote": 0,
+    "volumeFee": 0,
+    "apr": 0,
+    "feeApr": 0,
+    "priceMin": -1,
+    "priceMax": -1,
+    "rewardApr": []
+  },
+  "week": {
+    "volume": 0,
+    "volumeQuote": 0,
+    "volumeFee": 0,
+    "apr": 0,
+    "feeApr": 0,
+    "priceMin": -1,
+    "priceMax": -1,
+    "rewardApr": []
+  },
+  "month": {
+    "volume": 0.059336607198899126,
+    "volumeQuote": 0.0004116200000000001,
+    "volumeFee": 0.00014834151799724785,
+    "apr": 0.08,
+    "feeApr": 0.08,
+    "priceMin": 1.1234576272382777e-10,
+    "priceMax": 1.1234576272382777e-10,
+    "rewardApr": []
+  },
+  "pooltype": ["OpenBookMarket"],
+  "rewardDefaultInfos": [],
+  "farmUpcomingCount": 0,
+  "farmOngoingCount": 0,
+  "farmFinishedCount": 0,
+  "marketId": "9ymKNjVYjx3UkmAvZBSNZ1KSw8PZ4DAc2rZpTkEHjvRT",
+  "lpMint": {
+    "chainId": 101,
+    "address": "3Y3F1MymVeuT58wPxXGEv9BqWRBWCRapfEHqMsMdM6x8",
+    "programId": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+    "logoURI": "",
+    "symbol": "",
+    "name": "",
+    "decimals": 9,
+    "tags": [],
+    "extensions": {}
+  },
+  "lpPrice": 0.017788397239296278,
+  "lpAmount": 121.567755297,
+  "burnPercent": 0.82
+}

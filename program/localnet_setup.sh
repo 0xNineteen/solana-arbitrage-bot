@@ -12,7 +12,7 @@ get_absolute_path() {
 # https://docs.solana.com/getstarted/local
 # first, start a local validator with `solana-test-validator` command in other terminal.
 # then, run this script in this terminal.
-#create a new keypair
+# create a new keypair
 # if [ ! -d "local_key" ]; then
 #     mkdir local_key
 # fi

@@ -167,6 +167,30 @@ async function main() {
   });
   console.log("aldrin_count", aldrin_count);
 
+  // OPENBOOK AMM
+  let openbook_pid = "opnb2LAfJYbRMAHHvqjCwQxanZn7ReEHp1k81EohpZb";
+  programs.push(openbook_pid);
+
+  let openbook_pools = "../pools/openbook/";
+  let openbook_pool_names = await read_dir_names(openbook_pools);
+  let openbook_count = 0;
+  for (let name of openbook_pool_names) {
+    let pool = JSON.parse(fs.readFileSync(openbook_pools + name));
+    openbook_count += 1;
+
+    accounts.push(pool.ownAddress);
+    accounts.push(pool.requestQueue);
+    accounts.push(pool.bids);
+    accounts.push(pool.asks);
+    accounts.push(pool.baseVault);
+    accounts.push(pool.quoteVault);
+    accounts.push(pool.eventQueue);
+
+    mints.push(pool.baseMint);
+    mints.push(pool.quoteMint);
+  }
+  console.log("openbook_count", openbook_count);
+
   // SERUM AMM
   let serum_pid = "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin";
   programs.push(serum_pid);

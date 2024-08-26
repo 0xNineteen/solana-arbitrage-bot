@@ -10,10 +10,12 @@
   "license": "ISC",
   "dependencies": {
     "@aldrin_exchange/sdk": "^0.4.51",
+    "@jup-ag/api": "^6.0.27",
     "@openbook-dex/openbook-v2": "^0.1.7",
     "@orca-so/sdk": "^1.2.26",
     "@project-serum/borsh": "^0.2.5",
     "@project-serum/serum": "^0.13.65",
+    "@raydium-io/raydium-sdk-v2": "^0.1.65-alpha",
     "@solana/buffer-layout": "^4.0.1",
     "@solana/spl-token": "^0.3.11",
     "@solana/spl-token-swap": "^0.4.0",

@@ -49,7 +49,7 @@ impl Arbitrager {
         let out_edges = &self.graph_edges[src_curr];
 
         // path = 4 = A -> B -> C -> D
-        // path >= 5 == not valid bc max tx size is swaps
+        // path >= 5 == not valid bc max tx size is 4 swaps <- TODO: check this
         if path.len() == 4 {
             return;
         };
@@ -121,7 +121,7 @@ impl Arbitrager {
                         );
                         self.send_ixs(ixs);
                     }
-                } else if !path.contains(&dst_mint_idx) {
+                } else {
                     // ... search deeper
                     self.brute_force_search(
                         start_mint_idx,

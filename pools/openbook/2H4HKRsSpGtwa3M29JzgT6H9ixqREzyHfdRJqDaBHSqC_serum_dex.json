@@ -1,1 +1,15 @@
-{"ownAddress":"2H4HKRsSpGtwa3M29JzgT6H9ixqREzyHfdRJqDaBHSqC","baseMint":"6utXGzJw43NJzQvesTukDauY5hvWvxZ3p5KrDoSG6kSy","quoteMint":"So11111111111111111111111111111111111111112","baseScale":3,"quoteScale":9,"baseVault":"AxD3xdiobepJaMmvAmUrPbd7xaGUZpHW2JrVVb9izQhx","quoteVault":"7tcEkfZWuAigFVTUg5aw8hVrmKmgUBco4XWxPdNdysvf","requestQueue":"2vk9LDN3Ert6xshBEbNzc1SYDfxEZwZ3UPG32kcjyE9C","eventQueue":"2QYbBUn4gfY4HywPfz7uWpujp3FMVaf3Mzec79WqNDRE","bids":"H8rW1JBYyzkbjLkjGQEHvEDENCMXjWkEzgcbJ2xE4rwd","asks":"DmXH8PLTovy5wQUvphqus2CC7b9iBe8oyhTVSJzY5UnJ","vaultSigner":"7S9kDE5r1QVYWosCthAcGsBRvpPsqZcKArPTiv3MSm8P","takerFeePct":0.22}
+{
+  "ownAddress": "2H4HKRsSpGtwa3M29JzgT6H9ixqREzyHfdRJqDaBHSqC",
+  "baseMint": "6utXGzJw43NJzQvesTukDauY5hvWvxZ3p5KrDoSG6kSy",
+  "quoteMint": "So11111111111111111111111111111111111111112",
+  "baseScale": 3,
+  "quoteScale": 9,
+  "baseVault": "AxD3xdiobepJaMmvAmUrPbd7xaGUZpHW2JrVVb9izQhx",
+  "quoteVault": "7tcEkfZWuAigFVTUg5aw8hVrmKmgUBco4XWxPdNdysvf",
+  "requestQueue": "2vk9LDN3Ert6xshBEbNzc1SYDfxEZwZ3UPG32kcjyE9C",
+  "eventQueue": "2QYbBUn4gfY4HywPfz7uWpujp3FMVaf3Mzec79WqNDRE",
+  "bids": "H8rW1JBYyzkbjLkjGQEHvEDENCMXjWkEzgcbJ2xE4rwd",
+  "asks": "DmXH8PLTovy5wQUvphqus2CC7b9iBe8oyhTVSJzY5UnJ",
+  "vaultSigner": "7S9kDE5r1QVYWosCthAcGsBRvpPsqZcKArPTiv3MSm8P",
+  "takerFeePct": 0.22
+}

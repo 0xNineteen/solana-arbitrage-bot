@@ -10,10 +10,10 @@ use std::num::NonZeroU64;
 
 use crate::state::SwapState;
 
-// all taken from the serum swap program 
+// all taken from the serum swap program
 
 /// Convenience API to initialize an open orders account on the Serum DEX.
-pub fn _init_open_order<'info>(ctx: Context<InitOpenOrder>) -> Result<()> {
+pub fn _init_open_order(ctx: Context<InitOpenOrder>) -> Result<()> {
     let ctx = CpiContext::new(ctx.accounts.dex_program.clone(), ctx.accounts.into());
     dex::init_open_orders(ctx).unwrap();
     Ok(())
@@ -24,9 +24,8 @@ pub fn _serum_swap<'info>(
     amount_in: u64,
     side: Side,
 ) -> Result<()> {
-
     // Optional referral account (earns a referral fee).
-    let referral = ctx.remaining_accounts.iter().next().map(Clone::clone);
+    let referral = ctx.remaining_accounts.iter().next().cloned();
 
     // Execute trade.
     let orderbook: OrderbookClient<'info> = (&*ctx.accounts).into();
@@ -34,11 +33,10 @@ pub fn _serum_swap<'info>(
         Side::Bid => orderbook.buy(amount_in, None)?,
         Side::Ask => orderbook.sell(amount_in, None)?,
     };
-    orderbook.settle(referral)?; // instant settle 
+    orderbook.settle(referral)?; // instant settle
 
     Ok(())
 }
-
 
 #[derive(Accounts)]
 pub struct InitOpenOrder<'info> {
@@ -105,7 +103,7 @@ pub struct SerumSwap<'info> {
     /// CHECK: bypass
     pub authority: AccountInfo<'info>,
     #[account(mut)]
-    pub pc_wallet: Account<'info, TokenAccount>, // !! 
+    pub pc_wallet: Account<'info, TokenAccount>, // !!
     // Programs.
     /// CHECK: bypass
     pub dex_program: AccountInfo<'info>,
@@ -114,7 +112,7 @@ pub struct SerumSwap<'info> {
     // Sysvars.
     /// CHECK: bypass
     pub rent: AccountInfo<'info>,
-    #[account(mut, seeds=[b"swap_state"], bump, )] 
+    #[account(mut, seeds=[b"swap_state"], bump, )]
     pub swap_state: Account<'info, SwapState>,
 }
 
@@ -153,11 +151,7 @@ impl<'info> OrderbookClient<'info> {
     //
     // `base_amount` is the "native" amount of the base currency, i.e., token
     // amount including decimals.
-    fn sell(
-        &self,
-        base_amount: u64,
-        srm_msrm_discount: Option<AccountInfo<'info>>,
-    ) -> Result<()> {
+    fn sell(&self, base_amount: u64, srm_msrm_discount: Option<AccountInfo<'info>>) -> Result<()> {
         let limit_price = 1;
         let max_coin_qty = {
             // The loaded market must be dropped before CPI.
@@ -179,11 +173,7 @@ impl<'info> OrderbookClient<'info> {
     //
     // `quote_amount` is the "native" amount of the quote currency, i.e., token
     // amount including decimals.
-    fn buy(
-        &self,
-        quote_amount: u64,
-        srm_msrm_discount: Option<AccountInfo<'info>>,
-    ) -> Result<()> {
+    fn buy(&self, quote_amount: u64, srm_msrm_discount: Option<AccountInfo<'info>>) -> Result<()> {
         let limit_price = u64::MAX;
         let max_coin_qty = u64::MAX;
         let max_native_pc_qty = quote_amount;
@@ -324,7 +314,7 @@ pub struct MarketAccounts<'info> {
     pub vault_signer: AccountInfo<'info>,
     // User wallets.
     #[account(mut)]
-    pub coin_wallet: Account<'info, TokenAccount>,  // !! 
+    pub coin_wallet: Account<'info, TokenAccount>, // !!
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
