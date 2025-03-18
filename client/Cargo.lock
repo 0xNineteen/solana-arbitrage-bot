@@ -1199,6 +1199,7 @@ dependencies = [
  "spl-math",
  "spl-token 4.0.0",
  "spl-token-swap",
+ "stable-swap-client",
  "stable-swap-math",
  "thiserror",
  "tmp",

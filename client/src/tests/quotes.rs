@@ -31,6 +31,7 @@ fn init_logger() {
 
 #[test]
 fn serum() {
+    // this dex seems to be deprecated
     let pool_dir = "../pools/serum/".to_string();
     let pool_tipe = PoolType::SerumPoolType;
     test_all_pool_quotes(pool_dir, pool_tipe);
@@ -275,20 +276,11 @@ fn test_pool_quote(
                     debug!("Actual amount out: {}", actual_amount_out);
                     assert!(actual_amount_out > 0);
 
-                    // delta 1 u128 (rounding?)
-                    if actual_amount_out >= quote_out_amount {
-                        assert!(
-                            actual_amount_out - quote_out_amount <= 2,
-                            "pool path: {pool_path} : \
+                    assert!(
+                        (actual_amount_out as i128 - quote_out_amount as i128).abs() <= 2,
+                        "pool path: {pool_path} : \
                             actual: {actual_amount_out} quote: {quote_out_amount}"
-                        );
-                    } else {
-                        assert!(
-                            quote_out_amount - actual_amount_out <= 2,
-                            "pool path: {pool_path} : \
-                            actual: {actual_amount_out} quote: {quote_out_amount}"
-                        );
-                    }
+                    );
                     0
                 }
             }

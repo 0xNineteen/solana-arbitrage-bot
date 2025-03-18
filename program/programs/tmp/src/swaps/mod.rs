@@ -1,9 +1,6 @@
 pub mod orca;
 pub use orca::*;
 
-pub mod jupiter;
-pub use jupiter::*;
-
 pub mod mercurial;
 pub use mercurial::*;
 

@@ -91,7 +91,10 @@ impl PoolOperations for MercurialPool {
         let fee_denom = 10_u128.pow(10);
 
         let calculator = Stable {
-            amp: self.amp,
+            target_amp: self.amp,
+            initial_amp: self.amp,
+            start_ramp_ts: 0,
+            stop_ramp_ts: 0,
             fee_numerator: self.fee_numerator as u128,
             fee_denominator: fee_denom,
         };

@@ -30,6 +30,9 @@ pub struct SaberPool {
     pub token_ids: Vec<String>,
     pub tokens: HashMap<String, Token>,
     pub target_amp: u64,
+    pub initial_amp: u64,
+    pub start_ramp_timestamp: i64,
+    pub stop_ramp_timestamp: i64,
     pub fee_numerator: u64,
     pub fee_denominator: u64,
     // unique
@@ -89,7 +92,10 @@ impl PoolOperations for SaberPool {
         mint_out: &Pubkey,
     ) -> anyhow::Result<u128> {
         let calculator = Stable {
-            amp: self.target_amp,
+            target_amp: self.target_amp,
+            initial_amp: self.initial_amp,
+            start_ramp_ts: self.start_ramp_timestamp,
+            stop_ramp_ts: self.stop_ramp_timestamp,
             fee_numerator: self.fee_numerator as u128,
             fee_denominator: self.fee_denominator as u128,
         };

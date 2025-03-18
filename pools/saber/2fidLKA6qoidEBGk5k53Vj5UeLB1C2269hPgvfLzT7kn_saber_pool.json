@@ -1,0 +1,35 @@
+{
+  "authority": "4RL1kuXnfQ6UkX1trqfyTRijsveCxbJmgbm1rjdc5Zpg",
+  "pool_account": "2fidLKA6qoidEBGk5k53Vj5UeLB1C2269hPgvfLzT7kn",
+  "pool_token_mint": "E3qo5YUXub3qFqoguhBPPzWxnvGagDa4vvua21xHCQYU",
+  "token_ids": [
+    "jupSoLaHXQiZZTSfEWMTRRgpnyFm8f6sZdosWBjx93v",
+    "vSoLxydx6akxyMD9XEcPvGYNGq6Nn66oqVb3UkGkei7"
+  ],
+  "tokens": {
+    "jupSoLaHXQiZZTSfEWMTRRgpnyFm8f6sZdosWBjx93v": {
+      "tag": "",
+      "name": "jupSOL",
+      "mint": "jupSoLaHXQiZZTSfEWMTRRgpnyFm8f6sZdosWBjx93v",
+      "addr": "7e2rCFQ6W4399moCnwpL5jZq8fVMFag4opEzv5gT26VC",
+      "scale": 9
+    },
+    "vSoLxydx6akxyMD9XEcPvGYNGq6Nn66oqVb3UkGkei7": {
+      "tag": "",
+      "name": "vSOL",
+      "mint": "vSoLxydx6akxyMD9XEcPvGYNGq6Nn66oqVb3UkGkei7",
+      "addr": "FoZGth8DqDxLwF4yZNVt5XRaW8HcxLbxG7K9bjYncJGm",
+      "scale": 9
+    }
+  },
+  "target_amp": 100,
+  "initial_amp": 100,
+  "start_ramp_timestamp": 0,
+  "stop_ramp_timestamp": 0,
+  "fee_numerator": 4,
+  "fee_denominator": 10000,
+  "fee_accounts": {
+    "jupSoLaHXQiZZTSfEWMTRRgpnyFm8f6sZdosWBjx93v": "EdQBNW9YihvpWKA4NJNjHvQpReQdaBtxTtM62A4HgD6B",
+    "vSoLxydx6akxyMD9XEcPvGYNGq6Nn66oqVb3UkGkei7": "DnP9oQ4brKLSDQEnSisQPdAXQQxUuVvAUFPajRGxuzsK"
+  }
+}

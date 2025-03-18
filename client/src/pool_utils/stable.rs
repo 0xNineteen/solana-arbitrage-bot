@@ -1,5 +1,6 @@
 //! The curve.fi invariant calculator.
 use {
+    crate::pool,
     arrayref::{array_mut_ref, array_ref},
     solana_program::{
         program_error::ProgramError,
@@ -13,6 +14,7 @@ use {
         },
         error::SwapError,
     },
+    stable_swap_client::fees::Fees,
     stable_swap_math::curve::StableSwap,
     std::time,
 };
@@ -21,7 +23,10 @@ use {
 // used for mercurial pools + saber pools
 // ported from jupiters sdk
 pub struct Stable {
-    pub amp: u64,
+    pub target_amp: u64,
+    pub initial_amp: u64,
+    pub start_ramp_ts: i64,
+    pub stop_ramp_ts: i64,
     pub fee_numerator: u128,
     pub fee_denominator: u128,
 }
@@ -34,7 +39,13 @@ impl From<&Stable> for StableSwap {
             .as_secs()
             .try_into()
             .unwrap();
-        StableSwap::new(value.amp, value.amp, current_ts, current_ts, current_ts)
+        StableSwap::new(
+            value.initial_amp,
+            value.target_amp,
+            current_ts,
+            value.start_ramp_ts,
+            value.stop_ramp_ts,
+        )
     }
 }
 
@@ -42,34 +53,30 @@ impl Stable {
     pub fn get_quote(
         &self,
         pool_amounts: [u128; 2], // [0] = src_amount, [1] = dst_amount
-        percision_multipliers: [u64; 2],
+        precision_multipliers: [u64; 2],
         scaled_amount_in: u128,
     ) -> u128 {
         let stable_swap: StableSwap = self.into();
-        // stableswap with percision multipliers
-        let xp: Vec<u128> = vec![
-            pool_amounts[0] * percision_multipliers[0] as u128,
-            pool_amounts[1] * percision_multipliers[1] as u128,
-        ];
-        let dx = scaled_amount_in * percision_multipliers[0] as u128;
-
-        let d = stable_swap
-            .compute_d(xp[0].try_into().unwrap(), xp[1].try_into().unwrap())
-            .unwrap();
-
-        let x = xp[0] + dx;
-        let y = stable_swap.compute_y(x.try_into().unwrap(), d).unwrap();
-        let dy: u128 = xp[1] - (y as u128);
-        let out_amount = dy.checked_div(percision_multipliers[1] as u128).unwrap();
-
-        // reduce fees at the end
-        let fees = out_amount
-            .checked_mul(self.fee_numerator)
-            .unwrap()
-            .checked_div(self.fee_denominator)
-            .unwrap();
-
-        out_amount - fees
+        let fees = Fees {
+            admin_trade_fee_numerator: self.fee_numerator as u64,
+            admin_trade_fee_denominator: self.fee_denominator as u64,
+            ..Default::default()
+        };
+        if let Some(result) = stable_swap.swap_to(
+            scaled_amount_in.try_into().unwrap(),
+            ((precision_multipliers[0] as u128) * pool_amounts[0])
+                .try_into()
+                .unwrap(),
+            ((precision_multipliers[1] as u128) * pool_amounts[1])
+                .try_into()
+                .unwrap(),
+            &fees,
+        ) {
+            // stableswap with percision multipliers
+            (result.amount_swapped - result.fee).into()
+        } else {
+            0
+        }
     }
 }
 

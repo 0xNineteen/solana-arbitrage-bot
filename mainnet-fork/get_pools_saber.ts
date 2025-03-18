@@ -116,6 +116,9 @@ interface SaberPool {
     };
   };
   target_amp: number;
+  initial_amp: number;
+  start_ramp_timestamp: number;
+  stop_ramp_timestamp: number;
   fee_numerator: number;
   fee_denominator: number;
   fee_accounts: {
@@ -130,48 +133,61 @@ async function main() {
       // Process the JSON data here
       let dataTyped = data as Root;
 
-      dataTyped.pools.forEach((pool) => {
-        let saberPool = <SaberPool>{};
-        saberPool.authority = pool.swap.config.authority;
-        saberPool.pool_account = pool.swap.config.swapAccount;
-        saberPool.pool_token_mint = pool.swap.state.poolTokenMint;
-        saberPool.token_ids = [];
-        saberPool.token_ids.push(pool.swap.state.tokenA.mint);
-        saberPool.token_ids.push(pool.swap.state.tokenB.mint);
-        saberPool.tokens = {};
-        saberPool.tokens[pool.swap.state.tokenA.mint] = {
-          tag: "",
-          name: pool.tokens[0].symbol,
-          mint: pool.swap.state.tokenA.mint,
-          addr: pool.swap.state.tokenA.reserve,
-          scale: pool.tokens[0].decimals,
-        };
-        saberPool.tokens[pool.swap.state.tokenB.mint] = {
-          tag: "",
-          name: pool.tokens[1].symbol,
-          mint: pool.swap.state.tokenB.mint,
-          addr: pool.swap.state.tokenB.reserve,
-          scale: pool.tokens[1].decimals,
-        };
-        saberPool.target_amp = parseInt("0x" + pool.swap.state.targetAmpFactor);
-        saberPool.fee_numerator = parseInt(
-          pool.swap.state.fees.trade.numeratorStr
-        );
-        saberPool.fee_denominator = parseInt(
-          pool.swap.state.fees.trade.denominatorStr
-        );
-        saberPool.fee_accounts = {};
-        saberPool.fee_accounts[pool.swap.state.tokenA.mint] =
-          pool.swap.state.tokenA.adminFeeAccount;
-        saberPool.fee_accounts[pool.swap.state.tokenB.mint] =
-          pool.swap.state.tokenB.adminFeeAccount;
-        fs.writeFile(
-          "../pools/saber/" + pool.swap.config.swapAccount + "_saber_pool.json",
-          JSON.stringify(saberPool),
-          "utf8",
-          () => {}
-        );
-      });
+      dataTyped.pools
+        .filter((p) => p.swap.state.isInitialized && !p.swap.state.isPaused)
+        .forEach((pool) => {
+          let saberPool = <SaberPool>{};
+          saberPool.authority = pool.swap.config.authority;
+          saberPool.pool_account = pool.swap.config.swapAccount;
+          saberPool.pool_token_mint = pool.swap.state.poolTokenMint;
+          saberPool.token_ids = [];
+          saberPool.token_ids.push(pool.swap.state.tokenA.mint);
+          saberPool.token_ids.push(pool.swap.state.tokenB.mint);
+          saberPool.tokens = {};
+          saberPool.tokens[pool.swap.state.tokenA.mint] = {
+            tag: "",
+            name: pool.tokens[0].symbol,
+            mint: pool.swap.state.tokenA.mint,
+            addr: pool.swap.state.tokenA.reserve,
+            scale: pool.tokens[0].decimals,
+          };
+          saberPool.tokens[pool.swap.state.tokenB.mint] = {
+            tag: "",
+            name: pool.tokens[1].symbol,
+            mint: pool.swap.state.tokenB.mint,
+            addr: pool.swap.state.tokenB.reserve,
+            scale: pool.tokens[1].decimals,
+          };
+          saberPool.target_amp = parseInt(
+            "0x" + pool.swap.state.targetAmpFactor
+          );
+          saberPool.initial_amp = parseInt(
+            "0x" + pool.swap.state.initialAmpFactor
+          );
+
+          saberPool.start_ramp_timestamp = pool.swap.state.startRampTimestamp;
+          saberPool.stop_ramp_timestamp = pool.swap.state.stopRampTimestamp;
+
+          saberPool.fee_numerator = parseInt(
+            pool.swap.state.fees.trade.numeratorStr
+          );
+          saberPool.fee_denominator = parseInt(
+            pool.swap.state.fees.trade.denominatorStr
+          );
+          saberPool.fee_accounts = {};
+          saberPool.fee_accounts[pool.swap.state.tokenA.mint] =
+            pool.swap.state.tokenA.adminFeeAccount;
+          saberPool.fee_accounts[pool.swap.state.tokenB.mint] =
+            pool.swap.state.tokenB.adminFeeAccount;
+          fs.writeFile(
+            "../pools/saber/" +
+              pool.swap.config.swapAccount +
+              "_saber_pool.json",
+            JSON.stringify(saberPool),
+            "utf8",
+            () => {}
+          );
+        });
     })
     .catch((error) => {
       // Handle any errors that occur during the fetch request

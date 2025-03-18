@@ -59,7 +59,7 @@ export const AccountLayout = struct([
 
 async function main() {
   let connection = new web3.Connection(
-    "https://methodical-soft-card.solana-mainnet.quiknode.pro/91b29303c21bce424386b919f222da4f4358374a/",
+    "http://57.129.59.166:8899",
     "confirmed"
   );
   let programs = [];

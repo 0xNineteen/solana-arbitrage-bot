@@ -11,14 +11,10 @@ import {
   option,
   vec,
 } from "@project-serum/borsh";
-let fs = require("fs");
+import * as fs from "fs";
 
 /** Token account state as stored by the program */
-export enum AccountState {
-  Uninitialized = 0,
-  Initialized = 1,
-  Frozen = 2,
-}
+export type AccountState = 0 | 1 | 2;
 
 /** Token account as stored by the program */
 export interface RawAccount {
@@ -67,10 +63,16 @@ async function main() {
   let owner_secret = new Uint8Array(JSON.parse(rawdata));
   let owner = web3.Keypair.fromSecretKey(owner_secret);
   let my_pubkey = owner.publicKey;
+  let file = await fs.readFileSync("saved_mints.json");
 
-  let mints = JSON.parse(await fs.readFileSync("saved_mints.json"));
+  let mints = JSON.parse(file.toString("utf-8"));
   mints = mints.map((v) => new web3.PublicKey(v));
-  console.log("NUmber of saved mints", mints.length, "for address", my_pubkey.toString());
+  console.log(
+    "NUmber of saved mints",
+    mints.length,
+    "for address",
+    my_pubkey.toString()
+  );
 
   let ata_pks = await Promise.all(
     mints.map(async (m) => {

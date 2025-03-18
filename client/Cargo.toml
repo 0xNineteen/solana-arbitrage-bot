@@ -46,6 +46,7 @@ solana-program = "1.9.9"
 spl-token = { version = "4.0.0", features = ["no-entrypoint"] }
 spl-token-swap = { version = "3.0.0", features = ["no-entrypoint"] }
 stable-swap-math = "^1.8.1"
+stable-swap-client = "^1.8.1"
 thiserror = "1.0"
 arbitrary = { version = "1.0", features = ["derive"], optional = true }
 roots = { version = "0.0.8", optional = true }
