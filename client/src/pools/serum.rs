@@ -256,14 +256,20 @@ impl PoolOperations for SerumPool {
             amount_out: 0,
         };
 
-        let market_acc = &self.accounts.as_ref().unwrap()[0];
-        let bids_acc = &self.accounts.as_ref().unwrap()[1];
-        let asks_acc = &self.accounts.as_ref().unwrap()[2];
+        let Some(accounts) = self.accounts.as_ref() else {
+            return 0;
+        };
+        let market_acc = accounts.get(0).and_then(|account| account.as_ref());
+        let bids_acc = accounts.get(1).and_then(|account| account.as_ref());
+        let asks_acc = accounts.get(2).and_then(|account| account.as_ref());
+        let (Some(market_acc), Some(bids_acc), Some(asks_acc)) = (market_acc, bids_acc, asks_acc) else {
+            return 0;
+        };
         
         // clone accounts for simulation (improve later?)
-        let market_acc = &mut market_acc.clone().unwrap();
-        let bid_acc = &mut bids_acc.clone().unwrap();
-        let ask_acc = &mut asks_acc.clone().unwrap();
+        let market_acc = &mut market_acc.clone();
+        let bid_acc = &mut bids_acc.clone();
+        let ask_acc = &mut asks_acc.clone();
 
         let market_acc_info = &account_info(&self.own_address.0, market_acc);
         let bids_acc = &account_info(&self.bids.0, bid_acc);
@@ -370,14 +376,20 @@ impl PoolOperations for SerumPool {
         _mint_out: &Pubkey
     ) -> bool {
 
-        let market_acc = &self.accounts.as_ref().unwrap()[0];
-        let bids_acc = &self.accounts.as_ref().unwrap()[1];
-        let asks_acc = &self.accounts.as_ref().unwrap()[2];
+        let Some(accounts) = self.accounts.as_ref() else {
+            return false;
+        };
+        let market_acc = accounts.get(0).and_then(|account| account.as_ref());
+        let bids_acc = accounts.get(1).and_then(|account| account.as_ref());
+        let asks_acc = accounts.get(2).and_then(|account| account.as_ref());
+        let (Some(market_acc), Some(bids_acc), Some(asks_acc)) = (market_acc, bids_acc, asks_acc) else {
+            return false;
+        };
         
         // clone accounts for simulation (improve later?)
-        let market_acc = &mut market_acc.clone().unwrap();
-        let bid_acc = &mut bids_acc.clone().unwrap();
-        let ask_acc = &mut asks_acc.clone().unwrap();
+        let market_acc = &mut market_acc.clone();
+        let bid_acc = &mut bids_acc.clone();
+        let ask_acc = &mut asks_acc.clone();
 
         let market_acc_info = &account_info(&self.own_address.0, market_acc);
         let bids_acc = &account_info(&self.bids.0, bid_acc);

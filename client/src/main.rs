@@ -199,11 +199,7 @@ fn main() {
         let accounts = connection.get_multiple_accounts(token_addr_chunk).unwrap();
         update_accounts.push(accounts);
     }
-    let mut update_accounts = update_accounts
-        .concat()
-        .into_iter()
-        .filter(|s| s.is_some())
-        .collect::<Vec<Option<Account>>>();
+    let mut update_accounts = update_accounts.concat();
 
     info!("update accounts is {:?}", update_accounts.len());
     // slide it out here
@@ -221,13 +217,23 @@ fn main() {
     let mut pool_count = 0;
     let mut account_ptr = 0;
 
-    for pool in pools.into_iter() {
+    for mut pool in pools.into_iter() {
         // update pool
         let length = update_pks_lengths[pool_count];
-        let _account_slice = &update_accounts[account_ptr..account_ptr + length].to_vec();
+        if account_ptr + length > update_accounts.len() {
+            warn!(
+                "skipping pool {}: expected {} update accounts, only {} remain",
+                pool.get_name(),
+                length,
+                update_accounts.len().saturating_sub(account_ptr),
+            );
+            pool_count += 1;
+            continue;
+        }
+        let account_slice = update_accounts[account_ptr..account_ptr + length].to_vec();
         account_ptr += length;
 
-        // pool.set_update_accounts(*account_slice);
+        pool.set_update_accounts(account_slice, cluster.clone());
 
         // add pool to graph
         let idxs = &all_mint_idxs[pool_count * 2..(pool_count + 1) * 2].to_vec();

@@ -182,6 +182,9 @@ impl PoolOperations for AldrinPool {
         _mint_in: &Pubkey,
         _mint_out: &Pubkey
     ) -> bool {
+        if self.pool_amounts.len() < self.get_mints().len() {
+            return false;
+        }
         for amount in self.pool_amounts.values() {
             if *amount == 0 { return false; }
         }
@@ -217,11 +220,15 @@ impl PoolOperations for AldrinPool {
         let id0 = &ids[0];
         let id1 = &ids[1];
         
-        let acc_data0 = &accounts[0].as_ref().unwrap().data;
-        let acc_data1 = &accounts[1].as_ref().unwrap().data;
+        let acc0 = accounts.get(0).and_then(|account| account.as_ref());
+        let acc1 = accounts.get(1).and_then(|account| account.as_ref());
+        let (Some(acc0), Some(acc1)) = (acc0, acc1) else {
+            self.pool_amounts.clear();
+            return;
+        };
 
-        let amount0 = unpack_token_account(acc_data0).amount as u128;
-        let amount1 = unpack_token_account(acc_data1).amount as u128;
+        let amount0 = unpack_token_account(&acc0.data).amount as u128;
+        let amount1 = unpack_token_account(&acc1.data).amount as u128;
 
         self.pool_amounts.insert(id0.clone(), amount0);
         self.pool_amounts.insert(id1.clone(), amount1);
